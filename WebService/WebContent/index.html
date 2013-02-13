@@ -2,9 +2,47 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Access-Control-Allow-Origin" content="*">
 <title>Insert title here</title>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript">
+    var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
+    
+        function processXML(data){
+        	$("#xml").html(data);
+        }
+        function ajax(url){
+        	url.replace("?","_#");
+        	url.replace("&&","@#");
+        }
+        function reciveData(url)
+        {
+			
+            if (window.XMLHttpRequest)
+            {
+                xhttp=new XMLHttpRequest();
+            }
+            else // IE 5/6
+            {
+                xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xhttp.onreadystatechange = redirectUser;        
+            xhttp.open("POST","/WebService/ajax?url="+url,true);
+            xhttp.send();
+            }
+
+        function redirectUser()
+        {
+            if (xhttp.readyState == 4)
+            {
+                log = 0;
+                xmlDoc = xhttp.responseText;
+                processXML(xmlDoc);
+            }
+        }
+</script>
 </head>
 <body>
-
+<div id="xml"></div>
 </body>
 </html>
