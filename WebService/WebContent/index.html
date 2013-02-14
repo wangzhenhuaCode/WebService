@@ -4,45 +4,290 @@
 <meta charset="UTF-8">
 <meta http-equiv="Access-Control-Allow-Origin" content="*">
 <title>Insert title here</title>
+<style>
+.contextmenu{
+  visibility:hidden;
+  background:#ffffff;
+  border:1px solid #8888FF;
+  z-index: 10;
+  position: relative;
+  width: 140px;
+}
+.contextmenu div{
+padding-left: 5px;
+font-size:14px;
+}
+</style>
+<link href="css/jqvmap.css" media="screen" rel="stylesheet" type="text/css" />
+<link href="js/jquery-window/css/jquery.window.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery.vmap.js"></script>
+<script type="text/javascript" src="js/jquery.vmap.usa.js"></script>
+<link href="js/jquery-ui/css/ui-darkness/jquery-ui-1.10.0.custom.css" rel="stylesheet"/>
+<script src="js/jquery-ui/js/jquery-ui-1.10.0.custom.js"></script>
+<script src="js/chart/highcharts.js"></script>
+<script src="js/jquery-window/jquery.window.js"></script>
+<script src="js/chart/modules/exporting.js"></script>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1WS5oZil_6A-DiEbHeyPnGI5IC-3_Eto&sensor=true">
+    </script>
 <script type="text/javascript">
-    var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
-    
-        function processXML(data){
-        	$("#xml").html(data);
-        }
-        function ajax(url){
+   // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
+   
+   var countyWIN=null;
+    $(function() {
+    	//$.post("/WebService/ajax",{url:convert(url)},function(data){}); 
+    	
+    	
+    	
+    	
+    	//USA MAP
+    	jQuery('#vmap').vectorMap({
+		    map: 'usa_en',
+		    enableZoom: true,
+		    showTooltip: true,
+		    selectedRegion: 'MO',
+		    onRegionClick: function(element, code, region)
+		        {
+		            
+		                 
+		            codeAddress(region);
+		            var url="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=NAME&for=state:*"
+		            
+		           $.post("/WebService/ajax",{url:convert(url)},function(data){
+		        	   var stateNum;
+		            	var state=data.split("],")
+		            	
+		            	for(var index in state){
+		            		var s=state[index];
+		            		var name=s.split("\"");
+		            		var sname=name[1];
+		            		if(sname==region){
+		            			stateNum=name[3];
+		            			break;
+		            		}
+		            	}
+		            	data=null;
+		            	s=null;
+		            	
+		            	 var url2="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=NAME&for=county:*&in=state:"+stateNum;
+				            $.post("/WebService/ajax",{url:convert(url2)},function(data1){
+				            	
+				            	var state1=data1.split("],")
+				            	var county="";
+				            	for(var index1 in state1){
+				            		if(index1>0){
+					            		var s1=state1[index1];
+					            		var name1=s1.split("\"");
+					            		county=county+"<li><a href=\"javascript:report('&for=county:"+name1[5]+"&in=state:"+name1[3]+"','"+name1[1]+" ,"+code+"');\">"+name1[1]+"</a></li>";
+				            		}
+				            	}
+				            	$("#county").html("");
+				            	$("#county").html(county);
+				            	if(countyWIN==null){
+				            		countyWIN=$.window({
+					      	 		   icon: "http://www.fstoke.me/favicon.ico",
+					      	 		   title: "Professional JavaScript for Web Developers",
+					      	 		   content: $("#countyContainer").html(),
+					      	 		   x:0,
+					      	 		   y:0,
+					      	 		onClose: function(wnd) {
+					      	 			countyWIN=null;
+					      	         }
+					      	 		});
+					            	
+				            	}else{
+				            		countyWIN.setContent($("#countyContainer").html());
+				            		countyWIN.show();
+				            	}
+				            });
+		            	
+		            });
+		           
+		        }
+		});
+    	initialize();
+    	
+    	
+    	
+    });
+    //finish onload
+ 		function report(url,address){
+ 			codeAddress(address);
+ 			var nurl="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=H011A0002,H011A0003,H011A0004,H011B0002,H011B0003,H011B0004,H011C0002,H011C0003,H011C0004,H011D0002,H011D0003,H011D0004,H011E0002,H011E0003,H011E0004,H011F0002,H011F0003,H011F0004"+url;
+ 			$.post("/WebService/ajax",{url:convert(nurl)},function(data){
+ 			data=data.split("],");
+ 			var cencusdata=data[1].split("\"");
+ 			var mortage=[];
+ 			var clean=[];
+ 			var rent=[];
+			var nums;
+ 			for(var i=1;i<=18;i++){
+ 				nums=parseInt(cencusdata[i*2-1]);
+ 				if((i*2-1)%6==1){
+ 					mortage.push(nums);
+ 				}
+ 				if((i*2-1)%6==3){
+ 					clean.push(nums);
+ 				}
+ 				if((i*2-1)%6==5){
+ 					rent.push(nums);
+ 				}
+ 			}
+ 			
+ 			var	chart = new Highcharts.Chart({
+ 		            chart: {
+ 		                renderTo: 'container',
+ 		                type: 'bar'
+ 		            },
+ 		            title: {
+ 		                text: 'Census'
+ 		            },
+ 		            xAxis: {
+ 		                categories: ['WHITE', 'BLACK OR AFRICAN AMERICAN', 'AMERICAN INDIAN AND ALASKA NATIVE', 'ASIAN', 'NATIVE HAWAIIAN AND OTHER PACIFIC ISLANDER','SOME OTHER RACE']
+ 		            },
+ 		            yAxis: {
+ 		                min: 0,
+ 		                title: {
+ 		                    text: 'Population'
+ 		                }
+ 		            },
+ 		            legend: {
+ 		                backgroundColor: '#FFFFFF',
+ 		                reversed: true
+ 		            },
+ 		            tooltip: {
+ 		                formatter: function() {
+ 		                    return ''+
+ 		                        this.series.name +': '+ this.y +'';
+ 		                }
+ 		            },
+ 		            plotOptions: {
+ 		                series: {
+ 		                    stacking: 'normal'
+ 		                }
+ 		            },
+ 		                series: [{
+ 		                name: 'Mortage',
+ 		                data: mortage
+ 		            }, {
+ 		                name: 'Clean',
+ 		                data: clean
+ 		            }, {
+ 		                name: 'Rent',
+ 		                data: rent
+ 		            }]
+ 		        });
+ 				
+ 			});
+ 		}
+        function convert(url)
+        {
         	url.replace("?","_#");
-        	url.replace("&&","@#");
+        	url.replace("&","@#");
+        	return url;
         }
-        function reciveData(url)
-        {
-			
-            if (window.XMLHttpRequest)
-            {
-                xhttp=new XMLHttpRequest();
-            }
-            else // IE 5/6
-            {
-                xhttp=new ActiveXObject("Microsoft.XMLHTTP");
-            }
-            xhttp.onreadystatechange = redirectUser;        
-            xhttp.open("POST","/WebService/ajax?url="+url,true);
-            xhttp.send();
-            }
+        
+        
+        //Google MAP
+        var geocoder;
+  var map;
+  function initialize() {
+    geocoder = new google.maps.Geocoder();
+    var latlng = new google.maps.LatLng(-34.397, 150.644);
+    var mapOptions = {
+      zoom: 12,
+      center: latlng,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    }
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+    google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
+    google.maps.event.addListener(map, "click",function(event){$('.contextmenu').remove();});
+  }
+  
+  function getCanvasXY(caurrentLatLng){
+      var scale = Math.pow(2, map.getZoom());
+     var nw = new google.maps.LatLng(
+         map.getBounds().getNorthEast().lat(),
+         map.getBounds().getSouthWest().lng()
+     );
+     var worldCoordinateNW = map.getProjection().fromLatLngToPoint(nw);
+     var worldCoordinate = map.getProjection().fromLatLngToPoint(caurrentLatLng);
+     var caurrentLatLngOffset = new google.maps.Point(
+         Math.floor((worldCoordinate.x - worldCoordinateNW.x) * scale),
+         Math.floor((worldCoordinate.y - worldCoordinateNW.y) * scale)
+     );
+     return caurrentLatLngOffset;
+  }
+  function setMenuXY(caurrentLatLng){
+    var mapWidth = $('#map_canvas').width();
+    var mapHeight = $('#map_canvas').height();
+    var menuWidth = $('.contextmenu').width();
+    var menuHeight = $('.contextmenu').height();
+    var clickedPosition = getCanvasXY(caurrentLatLng);
+    var x = clickedPosition.x ;
+    var y = clickedPosition.y ;
 
-        function redirectUser()
-        {
-            if (xhttp.readyState == 4)
-            {
-                log = 0;
-                xmlDoc = xhttp.responseText;
-                processXML(xmlDoc);
-            }
-        }
+     if((mapWidth - x ) < menuWidth)
+         x = x - menuWidth;
+    if((mapHeight - y ) < menuHeight)
+        y = y - menuHeight;
+
+    $('.contextmenu').css('left',x  );
+    $('.contextmenu').css('top',y );
+    }
+  
+  
+  function showContextMenu(caurrentLatLng  ) {
+      var projection;
+      var contextmenuDir;
+      projection = map.getProjection() ;
+      $('.contextmenu').remove();
+          contextmenuDir = document.createElement("div");
+        contextmenuDir.className  = 'contextmenu';
+        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='#'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='#'>Show local real estate</a><\/div><\/a>";
+      $(map.getDiv()).append(contextmenuDir);
+      
+      setMenuXY(caurrentLatLng);
+
+      contextmenuDir.style.visibility = "visible";
+     }
+  function codeAddress(address) {
+    
+    geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        map.setCenter(results[0].geometry.location);
+        var marker = new google.maps.Marker({
+            map: map,
+            position: results[0].geometry.location
+        });
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+  }
+  function whatshere(lot,lat){
+	  
+  }
+  function showzillow(lot,lat){
+	  
+	  
+  }
+       
 </script>
 </head>
 <body>
-<div id="xml"></div>
+
+<div id="countyContainer" style="display:none;">
+<ol id="county"></ol>
+</div>
+<div style="width:1200px;">
+<div id="vmap" style="width: 600px; height: 400px;float:left;"></div>
+<div id="map_canvas" style="width: 600px; height: 400px;float:left;"></div>
+<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto;width:1200px;"></div>
+
+
+
+</div>
+
 </body>
 </html>
