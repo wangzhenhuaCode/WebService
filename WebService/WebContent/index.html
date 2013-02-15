@@ -295,7 +295,6 @@ font-size:14px;
     	  parameters.push(['term', 'restaurant']);
     	  parameters.push(['location', place]);
     	  parameters.push(['sort', 0]);
-    	  parameters.push(['limit', 0]);
     	  parameters.push(['callback', 'cb']);
     	  parameters.push(['oauth_consumer_key', auth.consumerKey]);
     	  parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
@@ -341,9 +340,13 @@ font-size:14px;
 <div style="width:1200px;">
 <div id="vmap" style="width: 600px; height: 400px;float:left;"></div>
 <div id="map_canvas" style="width: 600px; height: 400px;float:left;"></div>
+
+<div style="float:left;">
+<script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TIMESERIES_GRAPH_0&export=5&w=500&h=330"></script>
+<script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=GEO_MAP_0_0&export=5&w=500&h=530"></script>
+<script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TOP_QUERIES_0_0&export=5&w=300&h=420"></script>
+</div>
 <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto;width:1200px;"></div>
-
-
 
 </div>
 
