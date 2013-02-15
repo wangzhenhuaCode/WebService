@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Access-Control-Allow-Origin" content="*">
+
 <title>Insert title here</title>
 <style>
 .contextmenu{
@@ -21,6 +20,7 @@ font-size:14px;
 <link href="css/jqvmap.css" media="screen" rel="stylesheet" type="text/css" />
 <link href="js/jquery-window/css/jquery.window.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/json.js"></script>
 <script type="text/javascript" src="js/jquery.vmap.js"></script>
 <script type="text/javascript" src="js/jquery.vmap.usa.js"></script>
 <link href="js/jquery-ui/css/ui-darkness/jquery-ui-1.10.0.custom.css" rel="stylesheet"/>
@@ -28,6 +28,8 @@ font-size:14px;
 <script src="js/chart/highcharts.js"></script>
 <script src="js/jquery-window/jquery.window.js"></script>
 <script src="js/chart/modules/exporting.js"></script>
+<script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
+<script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1WS5oZil_6A-DiEbHeyPnGI5IC-3_Eto&sensor=true">
     </script>
 <script type="text/javascript">
@@ -54,15 +56,11 @@ font-size:14px;
 		            var url="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=NAME&for=state:*"
 		            
 		           $.post("/WebService/ajax",{url:convert(url)},function(data){
-		        	   var stateNum;
-		            	var state=data.split("],")
-		            	
-		            	for(var index in state){
-		            		var s=state[index];
-		            		var name=s.split("\"");
-		            		var sname=name[1];
+		        	   var stateNum;  	
+		            	for(var index in data){
+		            		var sname=data[index][0];
 		            		if(sname==region){
-		            			stateNum=name[3];
+		            			stateNum=data[index][1];
 		            			break;
 		            		}
 		            	}
@@ -72,13 +70,12 @@ font-size:14px;
 		            	 var url2="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=NAME&for=county:*&in=state:"+stateNum;
 				            $.post("/WebService/ajax",{url:convert(url2)},function(data1){
 				            	
-				            	var state1=data1.split("],")
+				            	
 				            	var county="";
-				            	for(var index1 in state1){
+				            	for(var index1 in data1){
 				            		if(index1>0){
-					            		var s1=state1[index1];
-					            		var name1=s1.split("\"");
-					            		county=county+"<li><a href=\"javascript:report('&for=county:"+name1[5]+"&in=state:"+name1[3]+"','"+name1[1]+" ,"+code+"');\">"+name1[1]+"</a></li>";
+					            		
+					            		county=county+"<li><a href=\"javascript:report('&for=county:"+data1[index1][2]+"&in=state:"+data1[index1][1]+"','"+data1[index1][0]+" ,"+code+"');\">"+data1[index1][0]+"</a></li>";
 				            		}
 				            	}
 				            	$("#county").html("");
@@ -99,9 +96,9 @@ font-size:14px;
 				            		countyWIN.setContent($("#countyContainer").html());
 				            		countyWIN.show();
 				            	}
-				            });
+				            },'json');
 		            	
-		            });
+		            },'json');
 		           
 		        }
 		});
@@ -114,22 +111,20 @@ font-size:14px;
  		function report(url,address){
  			codeAddress(address);
  			var nurl="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=H011A0002,H011A0003,H011A0004,H011B0002,H011B0003,H011B0004,H011C0002,H011C0003,H011C0004,H011D0002,H011D0003,H011D0004,H011E0002,H011E0003,H011E0004,H011F0002,H011F0003,H011F0004"+url;
- 			$.post("/WebService/ajax",{url:convert(nurl)},function(data){
- 			data=data.split("],");
- 			var cencusdata=data[1].split("\"");
+ 			$.post("/WebService/ajax",{url:nurl},function(data){
  			var mortage=[];
  			var clean=[];
  			var rent=[];
 			var nums;
  			for(var i=1;i<=18;i++){
- 				nums=parseInt(cencusdata[i*2-1]);
- 				if((i*2-1)%6==1){
+ 				nums=parseInt(data[1][i-1]);
+ 				if((i)%3==1){
  					mortage.push(nums);
  				}
- 				if((i*2-1)%6==3){
+ 				if((i)%6==2){
  					clean.push(nums);
  				}
- 				if((i*2-1)%6==5){
+ 				if((i)%6==0){
  					rent.push(nums);
  				}
  			}
@@ -178,12 +173,12 @@ font-size:14px;
  		            }]
  		        });
  				
- 			});
+ 			},'json');
  		}
         function convert(url)
         {
-        	url.replace("?","_#");
-        	url.replace("&","@#");
+        	//url.replace("?","_#");
+        	//url.replace("&","@#");
         	return url;
         }
         
@@ -244,7 +239,7 @@ font-size:14px;
       $('.contextmenu').remove();
           contextmenuDir = document.createElement("div");
         contextmenuDir.className  = 'contextmenu';
-        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='#'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='#'>Show local real estate</a><\/div><\/a>";
+        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='javascript:whatshere("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='javascript:getLocalBusiness("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Show local real estate</a><\/div><\/a>";
       $(map.getDiv()).append(contextmenuDir);
       
       setMenuXY(caurrentLatLng);
@@ -266,11 +261,74 @@ font-size:14px;
     });
   }
   function whatshere(lot,lat){
-	  
+	  var url="http://maps.googleapis.com/maps/api/geocode/json?latlng="+lot+","+lat+"&sensor=true";
+      $.post("/WebService/ajax",{url:convert(url)},function(data1){
+    	  var result=(data1.results)[0],address=(result.address_components)[2];
+    	  var place=address.long_name;
+    	  alert(place);
+    	  
+      },'json');
   }
-  function showzillow(lot,lat){
-	  
-	  
+  var auth = { 
+		  //
+		  // Update with your auth tokens.
+		  //
+		  consumerKey: "de0WNr5Rp0TZKJewwXItaA", 
+		  consumerSecret: "q-KAC3B3igYeqsNUwN13MwCfy8I",
+		  accessToken: "LcYbZJBd1D3Bwtj6wWrCkuzaeaQyk58i",
+		  // This example is a proof of concept, for how to use the Yelp v2 API with javascript.
+		  // You wouldn't actually want to expose your access token secret like this in a real application.
+		  accessTokenSecret: "hjlo0tEdeye7fijmEfDHaUQYHMw",
+		  serviceProvider: { 
+		    signatureMethod: "HMAC-SHA1"
+		  }
+		};
+  function getLocalBusiness(lot,lat){
+	  var place;
+	  var url="http://maps.googleapis.com/maps/api/geocode/json?latlng="+lot+","+lat+"&sensor=true";
+      $.post("/WebService/ajax",{url:convert(url)},function(data1){
+    	  var result=(data1.results)[0],address=(result.address_components)[2];
+    	  place=address.long_name;
+    	  place=place.replace(/\s/g,"+");
+    	  
+    	  parameters = [];
+    	  parameters.push(['term', 'restaurant']);
+    	  parameters.push(['location', place]);
+    	  parameters.push(['sort', 0]);
+    	  parameters.push(['limit', 0]);
+    	  parameters.push(['callback', 'cb']);
+    	  parameters.push(['oauth_consumer_key', auth.consumerKey]);
+    	  parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
+    	  parameters.push(['oauth_token', auth.accessToken]);
+    	  parameters.push(['oauth_signature_method', 'HMAC-SHA1']);
+    	  var message = { 
+    			  'action': 'http://api.yelp.com/v2/search',
+    			  'method': 'GET',
+    			  'parameters': parameters 
+    			};
+    	  var accessor = {
+    			  consumerSecret: auth.consumerSecret,
+    			  tokenSecret: auth.accessTokenSecret
+    			};
+    	  OAuth.setTimestampAndNonce(message);
+    	  OAuth.SignatureMethod.sign(message, accessor);
+
+    	  var parameterMap = OAuth.getParameterMap(message.parameters);
+    	  parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature);
+    	  
+    	  
+    	  $.ajax({
+    		  'url': message.action,
+    		  'data': parameterMap,
+    		  'cache': true,
+    		  'dataType': 'jsonp',
+    		  'jsonpCallback': 'cb',
+    		  'success': function(data, textStats, XMLHttpRequest) {
+    		    alert(data);
+    		  }
+    		});
+      },'json');
+      
   }
        
 </script>
