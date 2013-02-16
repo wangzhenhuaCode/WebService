@@ -30,8 +30,11 @@ font-size:14px;
 <script src="js/chart/modules/exporting.js"></script>
 <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
 <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1WS5oZil_6A-DiEbHeyPnGI5IC-3_Eto&sensor=true">
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1WS5oZil_6A-DiEbHeyPnGI5IC-3_Eto&sensor=false">
     </script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
+
+
 <script type="text/javascript">
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
    
@@ -185,7 +188,7 @@ font-size:14px;
         
         //Google MAP
         var geocoder;
-  var map;
+  var map,places;
   function initialize() {
     geocoder = new google.maps.Geocoder();
     var latlng = new google.maps.LatLng(-34.397, 150.644);
@@ -195,6 +198,7 @@ font-size:14px;
       mapTypeId: google.maps.MapTypeId.ROADMAP
     }
     map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+    places = new google.maps.places.PlacesService(map);
     google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
     google.maps.event.addListener(map, "click",function(event){$('.contextmenu').remove();});
   }
@@ -246,15 +250,13 @@ font-size:14px;
 
       contextmenuDir.style.visibility = "visible";
      }
+
   function codeAddress(address) {
     
     geocoder.geocode( { 'address': address}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
         map.setCenter(results[0].geometry.location);
-        var marker = new google.maps.Marker({
-            map: map,
-            position: results[0].geometry.location
-        });
+       
       } else {
         alert("Geocode was not successful for the following reason: " + status);
       }
@@ -283,18 +285,21 @@ font-size:14px;
 		    signatureMethod: "HMAC-SHA1"
 		  }
 		};
+  var yelpMarkerImage = {		  
+		  size: new google.maps.Size(25, 31),
+		  origin: new google.maps.Point(0, 0),
+		  anchor: new google.maps.Point(12, 30),
+		  url:"img/yelpMarker.png"
+		};
+  var yelpMarker=[];
+  var yelpTipWin=null;
   function getLocalBusiness(lot,lat){
-	  var place;
-	  var url="http://maps.googleapis.com/maps/api/geocode/json?latlng="+lot+","+lat+"&sensor=true";
-      $.post("/WebService/ajax",{url:convert(url)},function(data1){
-    	  var result=(data1.results)[0],address=(result.address_components)[2];
-    	  place=address.long_name;
-    	  place=place.replace(/\s/g,"+");
+	  
     	  
     	  parameters = [];
     	  parameters.push(['term', 'restaurant']);
-    	  parameters.push(['location', place]);
-    	  parameters.push(['sort', 0]);
+    	  parameters.push(['ll', lot+","+lat]);
+    	  parameters.push(['sort', 1]);
     	  parameters.push(['callback', 'cb']);
     	  parameters.push(['oauth_consumer_key', auth.consumerKey]);
     	  parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
@@ -315,7 +320,7 @@ font-size:14px;
     	  var parameterMap = OAuth.getParameterMap(message.parameters);
     	  parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature);
     	  
-    	  
+    	 
     	  $.ajax({
     		  'url': message.action,
     		  'data': parameterMap,
@@ -323,12 +328,126 @@ font-size:14px;
     		  'dataType': 'jsonp',
     		  'jsonpCallback': 'cb',
     		  'success': function(data, textStats, XMLHttpRequest) {
-    		    alert(data);
+    		    var business=data.businesses;
+    		    for(var i=0;i<business.length;i++){
+    		    	var b=business[i];
+    		    	var loc=b.location.coordinate;
+    		    	yelpMarker[i]=new google.maps.Marker({
+    		              position:new google.maps.LatLng(parseFloat(loc.latitude),parseFloat(loc.longitude)),
+    		              animation: google.maps.Animation.DROP,
+    		              map: map,
+    		              icon:yelpMarkerImage
+    		            });
+    		    	google.maps.event.addListener(yelpMarker[i], 'click', getYelpDetails(b.name, yelpMarker[i]));
+    		    }
+    			 
     		  }
     		});
-      },'json');
-      
+    
+     
   }
+  function getYelpDetails(content,marker) {
+	  return function() {
+	  if (yelpTipWin!=null) {
+		  yelpTipWin.close();
+		  yelpTipWin = null;
+        }
+
+        	yelpTipWin = new google.maps.InfoWindow({
+            content: "<div>"+content+"</div>"
+          });
+        	yelpTipWin.open(map, marker);
+        
+	  }
+    }
+  var markers = new Array();
+  var circle=new Array();
+  for(var i=0;i<5;i++){
+	  markers[i]=new Array();
+	  circle[i]=new Array();
+  }
+  var color=["133CAB","D1006A","00CB00","A001A5","FF0000"];
+  var icon=["deepBlue.png","pink.png","deepgreen.png","purple.png","red.png"];
+  var index=-1;
+  var flagimage = {		  
+		  size: new google.maps.Size(25, 60),
+		  origin: new google.maps.Point(0, 0),
+		  anchor: new google.maps.Point(3, 57),
+		};
+
+  function search() {
+	  index++;
+	  var keywords=$("#keywordsInput").val();
+	  var radius=parseInt($("#radiusInput").val());
+      var search = {
+    	key:"AIzaSyA9wYURB1vV7LhTmatcZfva240mj6gPHpk",
+    	query:keywords,
+        bounds: map.getBounds()
+      };
+     
+      places.textSearch(search, function(results, status) {
+        if (status == google.maps.places.PlacesServiceStatus.OK) {
+        	var letteredIcon = flagimage;
+        	  letteredIcon.url = "img/" + icon[index];
+          for (var i = 0; i < results.length; i++) {
+            markers[index][i] = new google.maps.Marker({
+              position: results[i].geometry.location,
+              animation: google.maps.Animation.DROP,
+              map: map,
+              icon:letteredIcon
+            });
+            var markercircle = {
+            	      strokeColor: color[index],
+            	      strokeOpacity: 0.5,
+            	      strokeWeight: 2,
+            	      fillColor: color[index],
+            	      fillOpacity: 0.25,
+            	      map: map,
+            	      center: results[i].geometry.location,
+            	      radius: radius
+            	    };
+            circle[index][i] = new google.maps.Circle(markercircle);
+            google.maps.event.addListener(circle[index][i], "rightclick",function(event){showContextMenu(event.latLng);});
+            google.maps.event.addListener(circle[index][i], "click",function(event){$('.contextmenu').remove();});
+           // google.maps.event.addListener(markers[i], 'click', getDetails(results[i], i));
+        	
+          }
+        }
+        
+      });
+    }
+
+  function getDetails(result, i) {
+      return function() {
+        places.getDetails({
+          reference: result.reference
+        }, showInfoWindow(i));
+      }
+    }
+
+    function showInfoWindow(i) {
+      return function(place, status) {
+        if (iw) {
+          iw.close();
+          iw = null;
+        }
+
+        if (status == google.maps.places.PlacesServiceStatus.OK) {
+          iw = new google.maps.InfoWindow({
+            content: getIWContent(place)
+          });
+          iw.open(map, markers[i]);
+        }
+      }
+    }
+
+    function getIWContent(place) {
+      var content = '<table style="border:0"><tr><td style="border:0;">';
+      content += '<img class="placeIcon" src="' + place.icon + '"></td>';
+      content += '<td style="border:0;"><b><a href="' + place.url + '">' + place.name + '</a></b>';
+      content += '</td></tr></table>';
+      return content;
+    }
        
 </script>
 </head>
@@ -345,10 +464,13 @@ font-size:14px;
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TIMESERIES_GRAPH_0&export=5&w=500&h=330"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=GEO_MAP_0_0&export=5&w=500&h=530"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TOP_QUERIES_0_0&export=5&w=300&h=420"></script>
+<input type="text" id="keywordsInput" /><input type="text" id="radiusInput" /><input type="button" value="add" onClick="search()"/>
 </div>
 <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto;width:1200px;"></div>
 
 </div>
+<div>
 
+</div>
 </body>
 </html>
