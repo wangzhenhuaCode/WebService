@@ -11,13 +11,13 @@ import java.util.regex.Pattern;
 
 
 public class NBTest {
-	static HashMap<String, Integer> words;
+	static HashMap<String, Integer> words = null;
 	int total = 0;
 	private static BufferedReader buf;
 	public static String test(String testTweets, String fileName) throws IOException {
 		buf = new BufferedReader(new FileReader(fileName));
 		String doc1 = null;
-		words = new HashMap<String, Integer>();
+		if(words==null)	words = new HashMap<String, Integer>();
 		while ((doc1=buf.readLine())!=null){
 			
 			String[] wordMap = doc1.split(",");
