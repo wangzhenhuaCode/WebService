@@ -46,43 +46,16 @@ font-size:14px;
     	
     	
     	
-    	//USA MAP
-    	jQuery('#vmap').vectorMap({
-		    map: 'usa_en',
-		    enableZoom: true,
-		    showTooltip: true,
-		    selectedRegion: 'MO',
-		    onRegionClick: function(element, code, region)
-		        {
-		            
-		                 
-		            codeAddress(region);
-		            var url="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=NAME&for=state:*"
-		            
-		           $.post("/WebService/ajax",{url:convert(url)},function(data){
-		        	   var stateNum;  	
-		            	for(var index in data){
-		            		var sname=data[index][0];
-		            		if(sname==region){
-		            			stateNum=data[index][1];
-		            			break;
-		            		}
-		            	}
-		            	
-		            	loadCountyShape(stateNum);
-		            	
-		            },'json');
-		           
-		        }
-		});
+    	
     	initialize();
     	
     	
     	
     });
     //finish onload
- 		function report(url){
- 			
+ 		function report(url,address){
+ 			clearRegion();
+ 			codeAddress(address);
  			var nurl="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=H011A0002,H011A0003,H011A0004,H011B0002,H011B0003,H011B0004,H011C0002,H011C0003,H011C0004,H011D0002,H011D0003,H011D0004,H011E0002,H011E0003,H011E0004,H011F0002,H011F0003,H011F0004"+url;
  			$.post("/WebService/ajax",{url:nurl},function(data){
  			var mortage=[];
@@ -161,9 +134,10 @@ font-size:14px;
   var map,places;
   function initialize() {
     geocoder = new google.maps.Geocoder();
-    var latlng = new google.maps.LatLng(-34.397, 150.644);
+    var latlng = new google.maps.LatLng(39.639538,-99.580078);
+    
     var mapOptions = {
-      zoom: 12,
+      zoom: 5,
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     }
@@ -171,6 +145,7 @@ font-size:14px;
     places = new google.maps.places.PlacesService(map);
     google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
     google.maps.event.addListener(map, "click",function(event){$('.contextmenu').remove();});
+    loadStateShape();
   }
   
   function getCanvasXY(caurrentLatLng){
@@ -213,7 +188,7 @@ font-size:14px;
       $('.contextmenu').remove();
           contextmenuDir = document.createElement("div");
         contextmenuDir.className  = 'contextmenu';
-        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='javascript:whatshere("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='javascript:getLocalBusiness("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Show local real estate</a><\/div><div><a href='javascript:evaluate("+caurrentLatLng.Ya+","+caurrentLatLng.Za+")'>Evaluate Here</a></div><\/a>";
+        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='javascript:whatshere("+caurrentLatLng.hb+","+caurrentLatLng.ib+");'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='javascript:getLocalBusiness("+caurrentLatLng.hb+","+caurrentLatLng.ib+");'>Show local business</a><\/div><div><a href='javascript:evaluate("+caurrentLatLng.hb+","+caurrentLatLng.ib+")'>Evaluate Here</a></div><\/a>";
       $(map.getDiv()).append(contextmenuDir);
       
       setMenuXY(caurrentLatLng);
@@ -233,6 +208,7 @@ font-size:14px;
     });
   }
   function whatshere(lot,lat){
+	  $('.contextmenu').remove();
 	  var url="http://maps.googleapis.com/maps/api/geocode/json?latlng="+lot+","+lat+"&sensor=true";
       $.post("/WebService/ajax",{url:convert(url)},function(data1){
     	  var result=(data1.results)[0],address=(result.address_components)[2];
@@ -264,7 +240,7 @@ font-size:14px;
   var yelpMarker=[];
   var yelpTipWin=null;
   function getLocalBusiness(lot,lat){
-	  
+	  $('.contextmenu').remove();
     	  
     	  parameters = [];
     	  parameters.push(['term', 'restaurant']);
@@ -368,10 +344,10 @@ font-size:14px;
             });
             var markercircle = {
             	      strokeColor: color[index],
-            	      strokeOpacity: 0.5,
+            	      strokeOpacity: 0.25,
             	      strokeWeight: 2,
             	      fillColor: color[index],
-            	      fillOpacity: 0.25,
+            	      fillOpacity: 0.1,
             	      map: map,
             	      center: results[i].geometry.location,
             	      radius: radius
@@ -387,6 +363,7 @@ font-size:14px;
       });
     }
 function evaluate(lat,lot){
+	$('.contextmenu').remove();
 	$.post("/WebService/score",{longitude:lot,latitude:lat,superType:generalCategory,type:subCategory},function(data1){
   	  var  score=data1;
   	  var str=$("#scoreTable").html();
@@ -394,29 +371,79 @@ function evaluate(lat,lot){
   		$("#scoreTable").html(str);
 	},'json');
 }
+var myOverlay = new Array();
 function loadCountyShape(stateCode){
+	
 	 $.ajax({
 		  'url': "xml/"+stateCode+".xml",
 		  'dataType': 'xml',
 		  'success': function(xmlDoc) {
 			  var data =[];
-				var i=0;
-				while(xmlDoc.getElementsByTagName("rawData")[i].childNodes[0]!=null){
-				    data.push(xmlDoc.getElementsByTagName("rawData")[i].childNodes[0].nodeValue);
-				    i++;
-				}
+			  var county=$(xmlDoc).find("county");
+			  county.each(function(i)
+				{
+						data.push($(this).children("rawdata").text());
+						
+				 });
+					
+				    
+				    
+			
 				var pitCounty = new Array();
-                pitCounty = createOverlay();
+                pitCounty = createOverlay(data);
                 for(var k=0;k<data.length;k++){
                 pitCounty[k].setMap(map);
+                var county_id=$(county[k]).children("county_id").text();
+                var state_id=$(county[k]).children("state_id").text();
+                var county_name=$(county[k]).children("county_name").text();
+                pitCounty[k].set("county",county_id);
+                pitCounty[k].set("state",state_id);
+                pitCounty[k].set("countyName",county_name);
+                google.maps.event.addListener(pitCounty[k], "click",function(){
+                	report("&for=county:"+this.get("county")+"&in=state:"+this.get("state"),this.get("countyName"));
+                	map.setZoom(11);
+                });
                 }
 			 
 		  }
 		});
 }
-function createOverlay(){
-    var myOverlay = new Array();
-    
+function loadStateShape(){
+	 $.ajax({
+		  'url': "xml/all.xml",
+		  'dataType': 'xml',
+		  'success': function(xmlDoc) {
+			  var data =[];
+			  var state=$(xmlDoc).find("county");
+			  state.each(function(i)
+				{
+						data.push($(this).children("rawdata").text());
+						
+				 });
+					
+				    
+				    
+			
+				var pitCounty = new Array();
+               pitCounty = createOverlay(data);
+               for(var k=0;k<data.length;k++){
+               pitCounty[k].setMap(map);
+               var county_id=$(state[k]).children("county_id").text();
+               var state_id=$(state[k]).children("state_id").text();
+               pitCounty[k].set("stateName",county_id);
+               pitCounty[k].set("state",state_id);
+               google.maps.event.addListener(pitCounty[k], "click",function(){
+            	   codeAddress(this.get("stateName"));
+            	   loadCountyShape(this.get("state"));
+            	   map.setZoom(7);
+               });
+               }
+			 
+		  }
+		});
+}
+function createOverlay(data){
+	clearRegion();
     for(var j=0;j<data.length;j++){
     var overlayCoords = new Array();
     var processedData = data[j].split(";");
@@ -426,17 +453,23 @@ function createOverlay(){
     }
     myOverlay[j] = new google.maps.Polygon({
                                             paths: overlayCoords,
-                                            strokeColor:"#FF0000",
+                                            strokeColor:"#1435AD",
                                             strokeOpacity:0.7,
-                                            strokeWeight:2,
-                                            fillColor:"#FF0000",
+                                            strokeWeight:1,
+                                            fillColor:"#1435AD",
                                             fillOpacity: 0.2
                                             });
     
 }
     return myOverlay;
 }
-
+function clearRegion(){
+	for(var i=0;i<myOverlay.length;i++){
+    	myOverlay[i].setMap(null);
+    	
+    }
+    myOverlay = new Array();
+}
        
 </script>
 </head>
@@ -458,13 +491,15 @@ function createOverlay(){
 <ol id="county"></ol>
 </div>
 <div style="width:1200px;">
-<div id="vmap" style="width: 600px; height: 400px;float:left;"></div>
-<div id="map_canvas" style="width: 600px; height: 400px;float:left;"></div>
+
+<div id="map_canvas" style="width: 1200px; height: 800px;float:left;"></div>
 
 <div style="float:left;">
+<!--  
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TIMESERIES_GRAPH_0&export=5&w=500&h=330"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=GEO_MAP_0_0&export=5&w=500&h=530"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TOP_QUERIES_0_0&export=5&w=300&h=420"></script>
+-->
 <input type="text" id="keywordsInput" /><input type="text" id="radiusInput" /><input type="button" value="add" onClick="search()"/>
 </div>
 <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto;width:1200px;"></div>
