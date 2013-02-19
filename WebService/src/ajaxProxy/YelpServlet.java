@@ -103,7 +103,7 @@ public class YelpServlet extends HttpServlet {
 		}
 		String temp = null;
 		try {
-			temp = NBTest.test(testTweets, "trainData.txt");
+			temp = NBTest.test(testTweets, request.getSession().getServletContext().getRealPath("/trainData.txt"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -13,16 +13,18 @@
   width: 140px;
 }
 .contextmenu div{
-padding-left: 5px;
-font-size:14px;
+	padding-left: 5px;
+	font-size:14px;
+}
+.markerLabel{
+	color:#fff;
+	font-size:14px;
 }
 </style>
 <link href="css/jqvmap.css" media="screen" rel="stylesheet" type="text/css" />
 
 <script type="text/javascript" src="js/jquery.js"></script>
 <script type="text/javascript" src="js/json.js"></script>
-<script type="text/javascript" src="js/jquery.vmap.js"></script>
-<script type="text/javascript" src="js/jquery.vmap.usa.js"></script>
 <link href="js/jquery-ui/css/ui-darkness/jquery-ui-1.10.0.custom.css" rel="stylesheet"/>
 <script src="js/jquery-ui/js/jquery-ui-1.10.0.custom.js"></script>
 <script src="js/chart/highcharts.js"></script>
@@ -33,7 +35,7 @@ font-size:14px;
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1WS5oZil_6A-DiEbHeyPnGI5IC-3_Eto&sensor=false">
     </script>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
-
+<script src="js/markerWithLabel.js"></script>
 
 <script type="text/javascript">
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
@@ -362,14 +364,33 @@ font-size:14px;
         
       });
     }
+ var evaluateMarker=new Array();
 function evaluate(lat,lot){
 	$('.contextmenu').remove();
 	$.post("/WebService/score",{longitude:lot,latitude:lat,superType:generalCategory,type:subCategory},function(data1){
   	  var  score=data1;
+  	  
+  	evaluateMarker.push( new MarkerWithLabel({
+        position: new google.maps.LatLng(parseFloat(lat),parseFloat(lot)),
+        map: map,
+        icon:getCircleIcon(data1.finalScore),
+        labelContent: data1.finalScore,
+        labelAnchor: new google.maps.Point(0,0),
+        labelClass: "markerLabel", // the CSS class for the label
+        labelInBackground: false
+      }));
+  	  /*
   	  var str=$("#scoreTable").html();
   	  str=str+"<tr><td>"+data1.prosperous+"</td><td>"+data1.need+"</td><td>"+data1.finalScore+"</td></tr>"
-  		$("#scoreTable").html(str);
+  		$("#scoreTable").html(str);*/
 	},'json');
+}
+function getCircleIcon(score) {
+	  var circle = {
+	    path: google.maps.SymbolPath.CIRCLE,
+	    scale: 10
+	  };
+	  return circle;
 }
 var myOverlay = new Array();
 function loadCountyShape(stateCode){
@@ -475,16 +496,7 @@ function clearRegion(){
 </head>
 <body>
 
-<!-- Score -->
-<div >
-<table id="scoreTable">
-<tr>
-<td>Prosperous</td>
-<td>need</td>
-<td>Final</td>
-</tr>
-</table>
-</div>
+
 
 
 <div id="countyContainer" style="display:none;">
