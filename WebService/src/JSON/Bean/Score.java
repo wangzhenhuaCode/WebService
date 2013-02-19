@@ -4,4 +4,7 @@ public class Score {
 	public Integer prosperous;
 	public Integer need;
 	public Double finalScore;
+	public Integer bad;
+	public Integer good;
+	public Double prob;
 }

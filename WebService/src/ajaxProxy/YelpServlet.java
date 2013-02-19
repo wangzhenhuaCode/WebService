@@ -10,7 +10,7 @@ import javax.servlet.http.*;
 import JSON.Bean.Business;
 import JSON.Bean.Score;
 import JSON.Bean.YelpBean;
-import JSON.Bean.Twitter.MoodType;
+
 import JSON.Bean.Twitter.Result;
 import JSON.Bean.Twitter.TwitterBean;
 import MachineLearning.NBTest;
@@ -79,13 +79,10 @@ public class YelpServlet extends HttpServlet {
 				competition++;
 		}
 		competition /= businesses.length;
-
 		Score score=new Score();
 		score.need=competition;
 		score.prosperous=saturation;
 		score.finalScore=((double)(competition+saturation))/2;
-		String str = JSONUtils.toJson(score);
-		out.println(str);
 		
 		consumerKey = "KkWZJyZ9LMVFNNt6pmxoDg";
 		consumerSecret = "uWI0MvkJ0wHqCEF8dsVR0yGPBRjdCJvcpAJv0M7gg";
@@ -113,13 +110,11 @@ public class YelpServlet extends HttpServlet {
 		}
 		System.out.print(temp);
 		String[] temps = temp.split(",");
-		MoodType type1 =new MoodType();
-		type1.good = Integer.parseInt(temps[1]);
-		type1.bad = Integer.parseInt(temps[3]);
-		type1.prob = type1.good*1.0/type1.bad;
-		String str1 = JSONUtils.toJson(type);
-
-		out.println(str1);
+		score.good = Integer.parseInt(temps[1]);
+		score.bad = Integer.parseInt(temps[3]);
+		score.prob = score.good*1.0/score.bad;
+		String str = JSONUtils.toJson(score);
+		out.println(str);
 		out.flush();
 		out.close();
 
