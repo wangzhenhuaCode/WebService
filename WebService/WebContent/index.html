@@ -18,7 +18,7 @@ font-size:14px;
 }
 </style>
 <link href="css/jqvmap.css" media="screen" rel="stylesheet" type="text/css" />
-<link href="js/jquery-window/css/jquery.window.css" rel="stylesheet" type="text/css" />
+
 <script type="text/javascript" src="js/jquery.js"></script>
 <script type="text/javascript" src="js/json.js"></script>
 <script type="text/javascript" src="js/jquery.vmap.js"></script>
@@ -26,7 +26,7 @@ font-size:14px;
 <link href="js/jquery-ui/css/ui-darkness/jquery-ui-1.10.0.custom.css" rel="stylesheet"/>
 <script src="js/jquery-ui/js/jquery-ui-1.10.0.custom.js"></script>
 <script src="js/chart/highcharts.js"></script>
-<script src="js/jquery-window/jquery.window.js"></script>
+
 <script src="js/chart/modules/exporting.js"></script>
 <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
 <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
@@ -37,8 +37,9 @@ font-size:14px;
 
 <script type="text/javascript">
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
-   
-   var countyWIN=null;
+   var generalCategory='restaurant';
+   var subCategory='chinese';
+
     $(function() {
     	//$.post("/WebService/ajax",{url:convert(url)},function(data){}); 
     	
@@ -67,39 +68,8 @@ font-size:14px;
 		            			break;
 		            		}
 		            	}
-		            	data=null;
-		            	s=null;
 		            	
-		            	 var url2="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=NAME&for=county:*&in=state:"+stateNum;
-				            $.post("/WebService/ajax",{url:convert(url2)},function(data1){
-				            	
-				            	
-				            	var county="";
-				            	for(var index1 in data1){
-				            		if(index1>0){
-					            		
-					            		county=county+"<li><a href=\"javascript:report('&for=county:"+data1[index1][2]+"&in=state:"+data1[index1][1]+"','"+data1[index1][0]+" ,"+code+"');\">"+data1[index1][0]+"</a></li>";
-				            		}
-				            	}
-				            	$("#county").html("");
-				            	$("#county").html(county);
-				            	if(countyWIN==null){
-				            		countyWIN=$.window({
-					      	 		   icon: "http://www.fstoke.me/favicon.ico",
-					      	 		   title: "Professional JavaScript for Web Developers",
-					      	 		   content: $("#countyContainer").html(),
-					      	 		   x:0,
-					      	 		   y:0,
-					      	 		onClose: function(wnd) {
-					      	 			countyWIN=null;
-					      	         }
-					      	 		});
-					            	
-				            	}else{
-				            		countyWIN.setContent($("#countyContainer").html());
-				            		countyWIN.show();
-				            	}
-				            },'json');
+		            	loadCountyShape(stateNum);
 		            	
 		            },'json');
 		           
@@ -111,8 +81,8 @@ font-size:14px;
     	
     });
     //finish onload
- 		function report(url,address){
- 			codeAddress(address);
+ 		function report(url){
+ 			
  			var nurl="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=H011A0002,H011A0003,H011A0004,H011B0002,H011B0003,H011B0004,H011C0002,H011C0003,H011C0004,H011D0002,H011D0003,H011D0004,H011E0002,H011E0003,H011E0004,H011F0002,H011F0003,H011F0004"+url;
  			$.post("/WebService/ajax",{url:nurl},function(data){
  			var mortage=[];
@@ -243,7 +213,7 @@ font-size:14px;
       $('.contextmenu').remove();
           contextmenuDir = document.createElement("div");
         contextmenuDir.className  = 'contextmenu';
-        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='javascript:whatshere("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='javascript:getLocalBusiness("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Show local real estate</a><\/div><\/a>";
+        contextmenuDir.innerHTML = "<a id='menu1'><div class=context><a href='javascript:whatshere("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Where is here?</a><\/div><\/a><a id='menu2'><div class=context><a href='javascript:getLocalBusiness("+caurrentLatLng.Ya+","+caurrentLatLng.Za+");'>Show local real estate</a><\/div><div><a href='javascript:evaluate("+caurrentLatLng.Ya+","+caurrentLatLng.Za+")'>Evaluate Here</a></div><\/a>";
       $(map.getDiv()).append(contextmenuDir);
       
       setMenuXY(caurrentLatLng);
@@ -338,7 +308,7 @@ font-size:14px;
     		              map: map,
     		              icon:yelpMarkerImage
     		            });
-    		    	google.maps.event.addListener(yelpMarker[i], 'click', getYelpDetails(b.name, yelpMarker[i]));
+    		    	google.maps.event.addListener(yelpMarker[i], 'click', getYelpDetails(b, yelpMarker[i]));
     		    }
     			 
     		  }
@@ -354,7 +324,7 @@ font-size:14px;
         }
 
         	yelpTipWin = new google.maps.InfoWindow({
-            content: "<div>"+content+"</div>"
+            content: "<div style='width:300px;'><div style='width:100px,height:100px;float:left;'><img src='"+content.image_url+"'></div><div style='width:195px;float:left;'><p style='margin-left:10px;margin-top:0;'>"+content.name+"<span style='color:#028E9B;font-size:14px;'>&nbsp;&nbsp;"+content.rating+"/5</span></p><p style='margin-left:10px;width:180px; max-height:57px; overflow-x:hidden;overflow-y:hidden;color:#333; font-size:12px;'>"+content.snippet_text+"</p></div></div>"
           });
         	yelpTipWin.open(map, marker);
         
@@ -409,49 +379,80 @@ font-size:14px;
             circle[index][i] = new google.maps.Circle(markercircle);
             google.maps.event.addListener(circle[index][i], "rightclick",function(event){showContextMenu(event.latLng);});
             google.maps.event.addListener(circle[index][i], "click",function(event){$('.contextmenu').remove();});
-           // google.maps.event.addListener(markers[i], 'click', getDetails(results[i], i));
+           	
         	
           }
         }
         
       });
     }
-
-  function getDetails(result, i) {
-      return function() {
-        places.getDetails({
-          reference: result.reference
-        }, showInfoWindow(i));
-      }
+function evaluate(lat,lot){
+	$.post("/WebService/score",{longitude:lot,latitude:lat,superType:generalCategory,type:subCategory},function(data1){
+  	  var  score=data1;
+  	  var str=$("#scoreTable").html();
+  	  str=str+"<tr><td>"+data1.prosperous+"</td><td>"+data1.need+"</td><td>"+data1.finalScore+"</td></tr>"
+  		$("#scoreTable").html(str);
+	},'json');
+}
+function loadCountyShape(stateCode){
+	 $.ajax({
+		  'url': "xml/"+stateCode+".xml",
+		  'dataType': 'xml',
+		  'success': function(xmlDoc) {
+			  var data =[];
+				var i=0;
+				while(xmlDoc.getElementsByTagName("rawData")[i].childNodes[0]!=null){
+				    data.push(xmlDoc.getElementsByTagName("rawData")[i].childNodes[0].nodeValue);
+				    i++;
+				}
+				var pitCounty = new Array();
+                pitCounty = createOverlay();
+                for(var k=0;k<data.length;k++){
+                pitCounty[k].setMap(map);
+                }
+			 
+		  }
+		});
+}
+function createOverlay(){
+    var myOverlay = new Array();
+    
+    for(var j=0;j<data.length;j++){
+    var overlayCoords = new Array();
+    var processedData = data[j].split(";");
+    for(var i =0; i<processedData.length; i++){
+        var xyCoords = processedData[i].split(",");
+        overlayCoords.push(new google.maps.LatLng(xyCoords[0],xyCoords[1]));
     }
+    myOverlay[j] = new google.maps.Polygon({
+                                            paths: overlayCoords,
+                                            strokeColor:"#FF0000",
+                                            strokeOpacity:0.7,
+                                            strokeWeight:2,
+                                            fillColor:"#FF0000",
+                                            fillOpacity: 0.2
+                                            });
+    
+}
+    return myOverlay;
+}
 
-    function showInfoWindow(i) {
-      return function(place, status) {
-        if (iw) {
-          iw.close();
-          iw = null;
-        }
-
-        if (status == google.maps.places.PlacesServiceStatus.OK) {
-          iw = new google.maps.InfoWindow({
-            content: getIWContent(place)
-          });
-          iw.open(map, markers[i]);
-        }
-      }
-    }
-
-    function getIWContent(place) {
-      var content = '<table style="border:0"><tr><td style="border:0;">';
-      content += '<img class="placeIcon" src="' + place.icon + '"></td>';
-      content += '<td style="border:0;"><b><a href="' + place.url + '">' + place.name + '</a></b>';
-      content += '</td></tr></table>';
-      return content;
-    }
        
 </script>
 </head>
 <body>
+
+<!-- Score -->
+<div >
+<table id="scoreTable">
+<tr>
+<td>Prosperous</td>
+<td>need</td>
+<td>Final</td>
+</tr>
+</table>
+</div>
+
 
 <div id="countyContainer" style="display:none;">
 <ol id="county"></ol>
@@ -469,8 +470,8 @@ font-size:14px;
 <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto;width:1200px;"></div>
 
 </div>
-<div>
 
-</div>
+
+
 </body>
 </html>

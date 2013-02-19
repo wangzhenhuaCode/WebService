@@ -10,10 +10,19 @@
   <servlet>
   	<servlet-name>webAjax</servlet-name>
   	<servlet-class>ajaxProxy.ProxyServlet</servlet-class>
+  	
+  </servlet>
+  <servlet>
+  	<servlet-name>scoreAjax</servlet-name>
+  	<servlet-class>ajaxProxy.YelpServlet</servlet-class>	
   </servlet>
   <servlet-mapping>
   	<servlet-name>webAjax</servlet-name>
   	<url-pattern>/ajax</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+  	<servlet-name>scoreAjax</servlet-name>
+  	<url-pattern>/score</url-pattern>
   </servlet-mapping>
 <welcome-file-list>
     <welcome-file>index.html</welcome-file>

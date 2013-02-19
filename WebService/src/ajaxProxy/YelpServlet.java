@@ -14,6 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
 import JSON.Bean.Business;
+import JSON.Bean.Score;
 import JSON.Bean.YelpBean;
 
 public class YelpServlet extends HttpServlet {
@@ -81,9 +82,11 @@ public class YelpServlet extends HttpServlet {
 		}
 		competition /= businesses.length;
 
-		String str = "<score>"+ "<saturation>" + saturation + "</saturation>\n";
-		str += "<competition>"+competition+"</competition>\n";
-		str += "</score>";
+		Score score=new Score();
+		score.need=competition;
+		score.prosperous=saturation;
+		score.finalScore=((double)(competition+saturation))/2;
+		String str = JSONUtils.toJson(score);
 		out.println(str);
 		out.flush();
 		out.close();
