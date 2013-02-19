@@ -27,9 +27,10 @@ public class NBTest {
 			words.put(key, Integer.parseInt(wordMap[wordMap.length-1]));
 		}
 		
-		String doc = testTweets;
-		
-		
+		String docTotal = testTweets;
+		String[] docs =docTotal.split("~!@##@!~");
+		int countGood=0, countBad=0;
+		for(String doc : docs) {
 			String stoutput = "";
 			
 			String[] docWords = doc.split("\\s+");
@@ -63,16 +64,15 @@ public class NBTest {
 					good+=Math.log(1.0/(words.get("1")+size));
 				}
 			}
-			good+=Math.log(1.0*(words.get("1")+1)/(2+total));
+			good+=Math.log(1.0*(words.get("1")+1)/(2+total))+Math.PI/6.0;
 			
 			
 			double prob = Math.max(good, bad);
-			String type;
-			if(prob==good) type= "good";
-			else  type= "bad";
-			stoutput = stoutput + type +","+prob;
-			System.out.println(stoutput);
-			return type;
+			
+			if(prob==good)  countGood++;
+			else  countBad++;
+		}
+		return "good,"+countGood+",bad,"+countBad;
 	}
 	
 }

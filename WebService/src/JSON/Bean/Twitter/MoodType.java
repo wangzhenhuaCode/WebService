@@ -1,5 +1,7 @@
 package JSON.Bean.Twitter;
 
 public class MoodType {
-	public String type;
+	public Integer bad;
+	public Integer good;
+	public Double prob;
 }

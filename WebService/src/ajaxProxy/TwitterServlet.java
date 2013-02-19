@@ -33,32 +33,27 @@ public class TwitterServlet extends HttpServlet {
 	    TwitterBean twitterBean = JSONUtils.fromJson(twitterJsonString, TwitterBean.class);
 		Result[] results = twitterBean.getResults();
 		String testTweets = "";
-		int good = 0;
-		int bad = 0;
 		for(Result result : results) {
-			testTweets = result.getText().substring(8);
-			String temp = "";
-			try {
-				temp =  NBTest.test(testTweets, "trainData.txt");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if(temp.equals("good")) good++;
-			else bad++;
+			testTweets += result.getText().substring(8)+"~!@##@!~";
 		}
-		double prob = 1.0*good/(good+bad);
-		String output;
-		if(prob>0.3) output = "good";
-		else output = "bad";
-		MoodType type = new MoodType();
-		type.type = output;
+		String temp = null;
+		try {
+			temp = NBTest.test(testTweets, "trainData.txt");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.print(temp);
+		String[] temps = temp.split(",");
+		MoodType type =new MoodType();
+		type.good = Integer.parseInt(temps[1]);
+		type.bad = Integer.parseInt(temps[3]);
+		type.prob = type.good*1.0/type.bad;
 		String str = JSONUtils.toJson(type);
 		PrintWriter out = response.getWriter();
 		out.println(str);
 		out.flush();
 		out.close();
-		
 	}
 
 
