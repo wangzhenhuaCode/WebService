@@ -19,6 +19,13 @@
 .markerLabel{
 	color:#fff;
 	font-size:14px;
+	width:20px;
+	text-align:center;
+}
+.evaluateWindow p{
+margin:0px;margin-bottom:10px;
+color:#333;
+font-size:14px;
 }
 </style>
 <link href="css/jqvmap.css" media="screen" rel="stylesheet" type="text/css" />
@@ -28,7 +35,7 @@
 <link href="js/jquery-ui/css/ui-darkness/jquery-ui-1.10.0.custom.css" rel="stylesheet"/>
 <script src="js/jquery-ui/js/jquery-ui-1.10.0.custom.js"></script>
 <script src="js/chart/highcharts.js"></script>
-
+<script type="text/javascript" src="js/jquery.raty.min.js"></script>
 <script src="js/chart/modules/exporting.js"></script>
 <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
 <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
@@ -41,10 +48,40 @@
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
    var generalCategory='restaurant';
    var subCategory='chinese';
-
+   var mapstyle=[
+                 {
+                	    "featureType": "water",
+                	    "elementType": "geometry",
+                	    "stylers": [
+                	      { "hue": "#00d4ff" }
+                	    ]
+                	  },{
+                	    "featureType": "landscape.man_made",
+                	    "stylers": [
+                	      { "hue": "#00ffd5" }
+                	    ]
+                	  },{
+                	    "featureType": "poi",
+                	    "stylers": [
+                	      { "hue": "#00ffa2" }
+                	    ]
+                	  },{
+                	    "featureType": "road.highway",
+                	    "stylers": [
+                	      { "hue": "#0091ff" }
+                	    ]
+                	  },{
+                	    "featureType": "road.arterial",
+                	    "stylers": [
+                	      { "saturation": -100 },
+                	      { "lightness": 18 }
+                	    ]
+                	  },{
+                	  }
+                	];
     $(function() {
     	//$.post("/WebService/ajax",{url:convert(url)},function(data){}); 
-    	
+    	$.fn.raty.defaults.path = 'js/img';
     	
     	
     	
@@ -56,7 +93,7 @@
     });
     //finish onload
  		function report(url,address){
- 			clearRegion();
+ 			clearRegion(myOverlay);
  			codeAddress(address);
  			var nurl="http://api.census.gov/data/2010/sf1?key=219b7e472bceaa9e85d81214fc0f18d54e6f8def&get=H011A0002,H011A0003,H011A0004,H011B0002,H011B0003,H011B0004,H011C0002,H011C0003,H011C0004,H011D0002,H011D0003,H011D0004,H011E0002,H011E0003,H011E0004,H011F0002,H011F0003,H011F0004"+url;
  			$.post("/WebService/ajax",{url:nurl},function(data){
@@ -137,16 +174,21 @@
   function initialize() {
     geocoder = new google.maps.Geocoder();
     var latlng = new google.maps.LatLng(39.639538,-99.580078);
-    
+    var styledMap = new google.maps.StyledMapType(mapstyle,
+    	    {name: "Styled Map"});
     var mapOptions = {
       zoom: 5,
       center: latlng,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
+      mapTypeControlOptions: {
+          mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+        }
     }
     map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
     places = new google.maps.places.PlacesService(map);
     google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
     google.maps.event.addListener(map, "click",function(event){$('.contextmenu').remove();});
+    map.mapTypes.set('map_style', styledMap);
+    map.setMapTypeId('map_style');
     loadStateShape();
   }
   
@@ -223,12 +265,19 @@
 		  //
 		  // Update with your auth tokens.
 		  //
+		  /*
 		  consumerKey: "de0WNr5Rp0TZKJewwXItaA", 
 		  consumerSecret: "q-KAC3B3igYeqsNUwN13MwCfy8I",
 		  accessToken: "LcYbZJBd1D3Bwtj6wWrCkuzaeaQyk58i",
 		  // This example is a proof of concept, for how to use the Yelp v2 API with javascript.
 		  // You wouldn't actually want to expose your access token secret like this in a real application.
-		  accessTokenSecret: "hjlo0tEdeye7fijmEfDHaUQYHMw",
+		  accessTokenSecret: "hjlo0tEdeye7fijmEfDHaUQYHMw",*/
+		  consumerKey: "qdTa32DN5GXphx9pujKiYw", 
+		  consumerSecret: "6VfLIu1RW6qi4wUfQOCoLMj6zis",
+		  accessToken: "YDkFPcLEa_CA-eg2imdK4UOBRMQTlUDI",
+		  // This example is a proof of concept, for how to use the Yelp v2 API with javascript.
+		  // You wouldn't actually want to expose your access token secret like this in a real application.
+		  accessTokenSecret: "zytby3RvTGAt8n8PoAxd46bg26k",
 		  serviceProvider: { 
 		    signatureMethod: "HMAC-SHA1"
 		  }
@@ -365,30 +414,54 @@
       });
     }
  var evaluateMarker=new Array();
+ var evaluateInfoWIN;
 function evaluate(lat,lot){
 	$('.contextmenu').remove();
 	$.post("/WebService/score",{longitude:lot,latitude:lat,superType:generalCategory,type:subCategory},function(data1){
   	  var  score=data1;
-  	  
-  	evaluateMarker.push( new MarkerWithLabel({
-        position: new google.maps.LatLng(parseFloat(lat),parseFloat(lot)),
-        map: map,
-        icon:getCircleIcon(data1.finalScore),
-        labelContent: data1.finalScore,
-        labelAnchor: new google.maps.Point(0,0),
-        labelClass: "markerLabel", // the CSS class for the label
-        labelInBackground: false
-      }));
+  	  var marker=new MarkerWithLabel({
+          position: new google.maps.LatLng(parseFloat(lat),parseFloat(lot)),
+          map: map,
+          icon:getCircleIcon(data1.finalScore),
+          labelContent: data1.finalScore,
+          labelAnchor: new google.maps.Point(10,7),
+          labelClass: "markerLabel", // the CSS class for the label
+          labelInBackground: false
+        });
+  	  evaluateMarker.push(marker);
+  	  google.maps.event.addListener(marker, 'click', getEvaluateInfo(data1, marker));
   	  /*
   	  var str=$("#scoreTable").html();
   	  str=str+"<tr><td>"+data1.prosperous+"</td><td>"+data1.need+"</td><td>"+data1.finalScore+"</td></tr>"
   		$("#scoreTable").html(str);*/
 	},'json');
 }
+function getEvaluateInfo(content,marker) {
+	  return function() {
+	  if (evaluateInfoWIN!=null) {
+		  evaluateInfoWIN.close();
+		  evaluateInfoWIN = null;
+      }
+
+	  	evaluateInfoWIN = new google.maps.InfoWindow({
+          content: "<div style='width:300px;' class='evaluateWindow'><p>Prosperous: <span id='pstar'></span></p><p'>Need: <span id='nstar'></span></p><p >Final: <span id='astar'></span></p><p>Customer satisfactory: "+content.prob+" %</p></div>"
+        });
+      	evaluateInfoWIN.open(map, marker);
+      	setTimeout(function() {
+      	$('#pstar').raty({ readOnly: true, score: content.prosperous });
+      	$('#nstar').raty({ readOnly: true, score: content.need });
+      	$('#astar').raty({ readOnly: true, score: content.finalScore });
+      	},100);
+	  }
+  }
 function getCircleIcon(score) {
 	  var circle = {
 	    path: google.maps.SymbolPath.CIRCLE,
-	    scale: 10
+	    scale: score*2+10,
+	    strokeColor: "#A61300",
+	    strokeWeight: 2,
+	    fillColor: 'red',
+	   	fillOpacity: 0.8,
 	  };
 	  return circle;
 }
@@ -464,7 +537,7 @@ function loadStateShape(){
 		});
 }
 function createOverlay(data){
-	clearRegion();
+	clearRegion(myOverlay);
     for(var j=0;j<data.length;j++){
     var overlayCoords = new Array();
     var processedData = data[j].split(";");
@@ -484,36 +557,33 @@ function createOverlay(data){
 }
     return myOverlay;
 }
-function clearRegion(){
-	for(var i=0;i<myOverlay.length;i++){
-    	myOverlay[i].setMap(null);
+function clearRegion(array){
+	for(var i=0;i<array.length;i++){
+		array[i].setMap(null);
     	
     }
-    myOverlay = new Array();
+	array = new Array();
 }
        
 </script>
 </head>
-<body>
+<body style="margin:0;">
 
 
 
 
-<div id="countyContainer" style="display:none;">
-<ol id="county"></ol>
-</div>
-<div style="width:1200px;">
+<div style="width:1280px;">
+<div style="width:1270px;height:47px;background-color:#f4f3ef;padding-top:5px;padding-left:10px;"><img src="img/logo.png" style="height:40px;"></div>
+<div id="map_canvas" style="width: 1280px; height: 600px;float:left;"></div>
 
-<div id="map_canvas" style="width: 1200px; height: 800px;float:left;"></div>
 
-<div style="float:left;">
 <!--  
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TIMESERIES_GRAPH_0&export=5&w=500&h=330"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=GEO_MAP_0_0&export=5&w=500&h=530"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TOP_QUERIES_0_0&export=5&w=300&h=420"></script>
 -->
 <input type="text" id="keywordsInput" /><input type="text" id="radiusInput" /><input type="button" value="add" onClick="search()"/>
-</div>
+
 <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto;width:1200px;"></div>
 
 </div>

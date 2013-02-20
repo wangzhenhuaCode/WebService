@@ -16,9 +16,10 @@ public class NBTest {
 
 	public static String test(String testTweets, String fileName)
 			throws IOException {
+		if (words == null) {
 		buf = new BufferedReader(new FileReader(fileName));
 		String doc1 = null;
-		if (words == null) {
+		
 			words = new HashMap<String, Integer>();
 			while ((doc1 = buf.readLine()) != null) {
 

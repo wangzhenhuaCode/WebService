@@ -3,6 +3,7 @@ package ajaxProxy;
 import java.io.IOException;
 
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -21,11 +22,17 @@ public class YelpServlet extends HttpServlet {
 
 		response.setHeader("Cache-Control", "no-cache");
 		PrintWriter out = response.getWriter();
+		/*
 		String consumerKey = "de0WNr5Rp0TZKJewwXItaA";
 		String consumerSecret = "q-KAC3B3igYeqsNUwN13MwCfy8I";
 		String token = "LcYbZJBd1D3Bwtj6wWrCkuzaeaQyk58i";
 		String tokenSecret = "hjlo0tEdeye7fijmEfDHaUQYHMw";
-
+*/
+		String consumerKey = "qdTa32DN5GXphx9pujKiYw";
+		String consumerSecret = "6VfLIu1RW6qi4wUfQOCoLMj6zis";
+		String token = "YDkFPcLEa_CA-eg2imdK4UOBRMQTlUDI";
+		String tokenSecret = "zytby3RvTGAt8n8PoAxd46bg26k";
+		
 		Yelp yelp = new Yelp(consumerKey, consumerSecret, token, tokenSecret);
 		double latitude = Double.parseDouble(request.getParameter("latitude"));
 		double longitude = Double
@@ -89,6 +96,9 @@ public class YelpServlet extends HttpServlet {
 		token = "12332042-Ql4ryiwsIItryn9WZrlJD0lPUaaDES5ib1VYLOJrg";
 		tokenSecret = "wgNsRajf6HYm1oyHCxy9mF3cx1PuEMLhhIJTAf4Cgq8";
 
+		
+		
+		
 	    Twitter twitter = new Twitter(consumerKey, consumerSecret, token, tokenSecret);
 	    latitude = Double.parseDouble(request.getParameter("latitude"));
 		longitude = Double
@@ -112,7 +122,8 @@ public class YelpServlet extends HttpServlet {
 		String[] temps = temp.split(",");
 		score.good = Integer.parseInt(temps[1]);
 		score.bad = Integer.parseInt(temps[3]);
-		score.prob = score.good*1.0/score.bad;
+		DecimalFormat df=new DecimalFormat("#.00"); 
+		score.prob =df.format( ((double)score.good)/((double)(score.bad+score.good))*100.0);
 		String str = JSONUtils.toJson(score);
 		out.println(str);
 		out.flush();

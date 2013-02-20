@@ -6,5 +6,5 @@ public class Score {
 	public Double finalScore;
 	public Integer bad;
 	public Integer good;
-	public Double prob;
+	public String prob;
 }
