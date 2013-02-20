@@ -1,4 +1,10 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
 <!DOCTYPE html>
+
 <html>
 <head>
 
@@ -141,8 +147,8 @@ color:#999;
 
 <script type="text/javascript">
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
-   var generalCategory='restaurant';
-   var subCategory='chinese';
+   var generalCategory='<%=request.getAttribute("gtype")%>';
+   var subCategory='<%=request.getAttribute("stype")%>';
    var state;
    var mapstyle=[
                  {
