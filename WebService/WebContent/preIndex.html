@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Insert title here</title>
+<style>
+
+.buttomPanel{
+width:1270px;
+height:47px;
+background-color:#f4f3ef;
+padding-top:10px;
+padding-left:10px;
+box-shadow: 0px -5px 5px #777;
+position:absolute; 
+top:559px;left:0;
+z-index:99;
+}
+.buttomPanel span a{
+color:#555;
+
+text-decoration:none;
+}
+.buttomPanel span a:visited{
+color:#555;
+
+text-decoration:none;
+}
+.buttomPanel span{
+color:#555;
+font-size:16px;
+padding-left:10px;
+padding-right:10px;
+border-right:solid 1px #333;
+
+}
+.reset{
+color:#777;
+font-size:13px;
+text-decoration:none;
+}
+
+#sliderDiv{
+top:52px;
+height:510px;
+width:950px;
+position:absolute;
+background-color:#f4f3ef;
+box-shadow: 5px 0px 5px #666;
+
+left:-960px;
+}
+#searchAress{
+-webkit-border-radius: 5px;
+border-radius: 5px;
+border:solid 1px #ccc;
+width:200px;
+height: 20px;
+background-image:url('img/search.png');
+background-repeat:no-repeat;
+background-size: 18px 18px;
+background-position:3px 3px;
+padding-left:24px;
+color:#999;
+}
+.queryDiv{
+-webkit-border-radius: 5px;
+border-radius: 5px;
+width:200px;
+padding-top:5px;
+padding-bottom:3px;
+background-color:#fff;
+border:solid 1px #ccc;
+background-image:url('img/search.png');
+background-repeat:no-repeat;
+background-size: 18px 18px;
+background-position:3px 3px;
+padding-left:24px;
+color:#999;
+font-size:13px;
+}
+.queryDiv input{
+border:0;
+color:#999;
+
+
+}
+select{
+height:30px;
+background:#000;
+color:#fff;
+}
+</style>
+
+<link rel="stylesheet" type="text/css" href="engine1/style.css" />
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript">
+var $ = function (id) {
+    return "string" == typeof id ? document.getElementById(id) : id;
+};
+
+function addEventHandler(oTarget, sEventType, fnHandler) {
+    if (oTarget.addEventListener) {
+        oTarget.addEventListener(sEventType, fnHandler, false);
+    } else if (oTarget.attachEvent) {
+        oTarget.attachEvent("on" + sEventType, fnHandler);
+    } else {
+        oTarget["on" + sEventType] = fnHandler;
+    }
+};
+
+function Each(arrList, fun){
+    for (var i = 0, len = arrList.length; i < len; i++) { fun(arrList[i], i); }
+};
+
+function GetOption(val, txt) {
+    var op = document.createElement("OPTION");
+    op.value = val; op.innerHTML = txt;
+    return op;
+};
+
+var Class = {
+  create: function() {
+    return function() {
+      this.initialize.apply(this, arguments);
+    }
+  }
+}
+
+Object.extend = function(destination, source) {
+    for (var property in source) {
+        destination[property] = source[property];
+    }
+    return destination;
+}
+
+
+var CascadeSelect = Class.create();
+CascadeSelect.prototype = {
+  initialize: function(arrSelects, arrMenu, options) {
+    if(arrSelects.length <= 0 || arrMenu.lenght <= 0) return;
+    
+    var oThis = this;
+    
+    this.Selects = [];
+    this.Menu = arrMenu;
+    
+    this.SetOptions(options);
+    
+    this.Default = this.options.Default || [];
+    
+    this.ShowEmpty = !!this.options.ShowEmpty;
+    this.EmptyText = this.options.EmptyText.toString();
+    
+    Each(arrSelects, function(o, i){
+        addEventHandler((oThis.Selects[i] = $(o)), "change", function(){ oThis.Set(i); });
+    });
+    
+    this.ReSet();
+  },
+  SetOptions: function(options) {
+    this.options = {
+        Default:    [],
+        ShowEmpty:    false,
+        EmptyText:    "Select"
+    };
+    Object.extend(this.options, options || {});
+  },
+  ReSet: function() {
+  
+    this.SetSelect(this.Selects[0], this.Menu, this.Default.shift());
+    this.Set(0);
+  },
+  Set: function(index) {
+    var menu = this.Menu
+    
+    for(var i=1, len = this.Selects.length; i < len; i++){
+        if(menu.length > 0){
+            var value = this.Selects[i-1].value;
+            if(value!=""){
+                Each(menu, function(o){ if(o.val == value){ menu = o.menu || []; } });
+            } else { menu = []; }
+            if(i > index){ this.SetSelect(this.Selects[i], menu, this.Default.shift()); }
+        } else {
+            this.SetSelect(this.Selects[i], [], "");
+        }
+    }
+    this.Default.length = 0;
+  },
+  SetSelect: function(oSel, menu, value) {
+    oSel.options.length = 0; oSel.disabled = false;
+    if(this.ShowEmpty){ oSel.appendChild(GetOption("", this.EmptyText)); }
+    if(menu.length <= 0){ oSel.disabled = true; return; }
+    
+    Each(menu, function(o){
+        var op = GetOption(o.val, o.txt ? o.txt : o.val); op.selected = (value == op.value);
+        oSel.appendChild(op);
+    });    
+  },
+  Add: function(menu) {
+    this.Menu[this.Menu.length] = menu;
+    this.ReSet();
+  },
+  Delete: function(index) {
+    if(index < 0 || index >= this.Menu.length) return;
+    for(var i = index, len = this.Menu.length - 1; i < len; i++){ this.Menu[i] = this.Menu[i + 1]; }
+    this.Menu.pop()
+    this.ReSet();
+  }
+};
+
+
+window.onload=function(){
+    
+    var menu = [
+        {'val': '1', 'txt': 'select your business'},
+        {'val': 'Restaurants (restaurants) ->', 'menu': [
+            {'val': 'Afghan (afghani)'},
+            {'val': 'African (african) ->', 'menu': [
+                {'val': 'Senegalese (senegalese)'},
+				{'val': 'South African (southafrican)'}
+            ]},
+			{'val': 'American (New) (newamerican)'},
+			{'val': 'American (Traditional) (tradamerican)'},
+			{'val': 'Arabian (arabian)'},
+			{'val': 'Argentine (argentine)'},
+			{'val': 'Asian Fusion (asianfusion)'},
+			{'val': 'Australian (australian)'},
+			{'val': 'Austrian (austrian)'},
+			{'val': 'Bangladeshi (bangladeshi)'},
+			{'val': 'Barbeque (bbq)'},
+			{'val': 'Basque (basque)'},
+			{'val': 'Belgian (belgian)'},
+			{'val': 'Brasseries (brasseries)'},
+			{'val': 'Brazilian (brazilian)'},
+			{'val': 'Breakfast & Brunch (breakfast_brunch)'},
+			{'val': 'British (british)'},
+			{'val': 'Buffets (buffets)'},
+			{'val': 'Burgers (burgers)'},
+			{'val': 'Burmese (burmese)'},
+			{'val': 'Cafes (cafes)'},
+			{'val': 'Cajun/Creole (cajun)'},
+			{'val': 'Cambodian (cambodian)'},
+			{'val':  'Caribbean (caribbean) ->', 'menu': [
+                {'val': 'Dominican (dominican)'},
+                {'val': 'Haitian (haitian)'},
+				{'val': 'Puerto Rican (puertorican)'},
+				{'val': 'Trinidadian (trinidadian)'}
+            ]},
+			{'val': 'Catalan (catalan)'},
+			{'val': 'Cheesesteaks (cheesesteaks)'},
+			{'val': 'Chicken Wings (chicken_wings)'},
+			{'val': 'Chinese (chinese) ->', 'menu': [
+                {'val': 'Cantonese (cantonese)'},
+                {'val': 'Dim Sum (dimsum)'},
+				{'val': 'Shanghainese (shanghainese)'},
+				{'val': 'Szechuan (szechuan)'}
+            ]},
+			{'val': 'Comfort Food (comfortfood)'},
+			{'val': 'Creperies (creperies)'},
+			{'val': 'Cuban (cuban)'},
+			{'val': 'Czech/Slovakian (czechslovakian)'},
+			{'val': 'Delis (delis)'},
+			{'val': 'Diners (diners)'},
+			{'val': 'Ethiopian (ethiopian)'},
+			{'val': 'Fast Food (hotdogs)'},
+			{'val': 'Filipino (filipino)'},
+			{'val': 'Fish & Chips (fishnchips)'},
+			{'val': 'Fondue (fondue)'},
+			{'val': 'Food Court (food_court)'},
+			{'val': 'Food Stands (foodstands)'},
+			{'val': 'French (french)'},
+			{'val': 'Gastropubs (gastropubs)'},
+			{'val': 'German (german)'},
+			{'val': 'Gluten-Free (gluten_free)'},
+			{'val': 'Greek (greek)'},
+			{'val': 'Halal (halal)'},
+			{'val': 'Hawaiian (hawaiian)'},
+			{'val': 'Himalayan/Nepalese (himalayan)'},
+			{'val': 'Hot Dogs (hotdog)'},
+			{'val': 'Hot Pot (hotpot)'},
+			{'val': 'Hungarian (hungarian)'},
+			{'val': 'Iberian (iberian)'},
+			{'val': 'Indian (indpak)'},
+			{'val': 'Indonesian (indonesian)'},
+			{'val': 'Irish (irish)'},
+			{'val': 'Italian (italian)'},
+			{'val': 'Japanese (japanese)'},
+			{'val': 'Korean (korean)'},
+			{'val': 'Kosher (kosher)'},
+			{'val': 'Laotian (laotian)'},
+			{'val': 'Latin American (latin)->', 'menu': [
+                {'val': 'Colombian (colombian)'},
+                {'val': 'Salvadoran (salvadoran)'},
+				{'val': 'Venezuelan (venezuelan)'}
+            ]},
+			{'val': 'Live/Raw Food (raw_food)'},
+			{'val': 'Malaysian (malaysian)'},
+			{'val': 'Mediterranean (mediterranean)'},
+			{'val': 'Mexican (mexican)'},
+			{'val': 'Middle Eastern (mideastern) ->', 'menu': [
+                {'val': 'Egyptian (egyptian)'},
+                {'val': 'Lebanese (lebanese)'}
+			]},
+			{'val': 'Modern European (modern_european)'},
+			{'val': 'Mongolian (mongolian)'},
+			{'val': 'Moroccan (moroccan)'},
+			{'val': 'Pakistani (pakistani)'},
+			{'val': 'Persian/Iranian (persian)'},
+			{'val': 'Peruvian (peruvian)'},
+			{'val': 'Pizza (pizza)'},
+			{'val': 'Polish (polish)'},
+			{'val': 'Portuguese (portuguese)'},
+			{'val': 'Russian (russian)'},
+			{'val': 'Salad (salad)'},
+			{'val': 'Sandwiches (sandwiches)'},
+			{'val': 'Scandinavian (scandinavian)'},
+			{'val': 'Scottish (scottish)'},
+			{'val': 'Seafood (seafood)'},
+			{'val': 'Singaporean (singaporean)'},
+			{'val': 'Soul Food (soulfood)'},
+			{'val': 'Soup (soup)'},
+			{'val': 'Southern (southern)'},
+			{'val': 'Spanish (spanish)'},
+			{'val': 'Steakhouses (steak)'},
+			{'val': 'Sushi Bars (sushi)'},
+			{'val': 'Taiwanese (taiwanese)'},
+			{'val': 'Tapas Bars (tapas)'},
+			{'val': 'Tapas/Small Plates (tapasmallplates)'},
+			{'val': 'Tex-Mex (tex-mex)'},
+			{'val': 'Thai (thai)'},
+			{'val': 'Turkish (turkish)'},
+			{'val': 'Ukrainian (ukrainian)'},
+			{'val': 'Vegan (vegan)'},
+			{'val': 'Vegetarian (vegetarian)'},
+			{'val': 'Vietnamese (vietnamese)'}
+        ]},
+        {'val': 'Shopping (shopping) ->', 'menu': [
+            {'val': 'Adult (adult)'},
+			{'val': 'Antiques (antiques)'},
+			{'val': 'Art Galleries (galleries)'},
+            {'val': 'Arts & Crafts (artsandcrafts) ->', 'menu': [
+                {'val': 'Art Supplies (artsupplies)'},
+                {'val': 'Cards & Stationery (stationery)'},
+				{'val': 'Costumes (costumes)'},
+                {'val': 'Fabric Stores (fabricstores)'},
+				{'val': 'Framing (framing)'}
+            ]},
+			{'val': 'Auction Houses (auctionhouses)'},
+			{'val': 'Baby Gear & Furniture (baby_gear)'},
+			{'val': 'Bespoke Clothing (bespoke)'},
+            {'val': 'Books, Mags, Music & Video (media) ->', 'menu': [
+                {'val': 'Bookstores (bookstores)'},
+                {'val': 'Comic Books (comicbooks)'},
+				{'val': 'Music & DVDs (musicvideo)'},
+                {'val': 'Newspapers & Magazines (mags)'},
+				{'val': 'Videos & Video Game Rental (videoandgames)'},
+				{'val': 'Vinyl Records (vinyl_records)'}
+            ]},
+			{'val': 'Bridal (bridal)'},
+			{'val': 'Computers (computers)'},
+			{'val': 'Cosmetics & Beauty Supply (cosmetics)'},
+            {'val': 'Department Stores (deptstores)'},
+			{'val': 'Discount Store (discountstore)'},
+			{'val': 'Drugstores (drugstores)'},
+			{'val': 'Electronics (electronics)'},
+            {'val': 'Eyewear & Opticians (opticians)'},
+			{'val': 'Fashion (fashion) ->', 'menu': [
+                {'val': 'Accessories (accessories)'},
+                {'val': 'Children Clothing (childcloth)'},
+				{'val': 'Department Stores (deptstores)'},
+                {'val': 'Formal Wear (formalwear)'},
+				{'val': 'Hats (hats)'},
+				{'val': 'Leather Goods (leather)'},
+				{'val': 'Lingerie (lingerie)'},
+				{'val': 'Maternity Wear (maternity)'},
+				{'val': 'Men Clothing (menscloth)'},
+				{'val': 'Plus Size Fashion (plus_size_fashion)'},
+				{'val': 'Shoe Stores (shoes)'},
+				{'val': 'Sports Wear (sportswear)'},
+				{'val': 'Swimwear (swimwear)'},
+				{'val': 'Used, Vintage & Consignment (vintage)'},
+				{'val': 'Womens Clothing (womenscloth)'}
+            ]},
+			{'val': 'Fireworks (fireworks)'},
+			{'val': 'Flowers & Gifts (flowers) ->', 'menu': [
+                {'val': 'Cards & Stationery (stationery)'},
+                {'val': 'Florists (florists)'},
+				{'val': 'Gift Shops (giftshops)'}
+            ]},
+            {'val': 'Guns & Ammo (guns_and_ammo)'},
+			{'val': 'Hobby Shops (hobbyshops)'},
+			{'val': 'Home & Garden (homeandgarden) ->', 'menu': [
+                {'val': 'Appliances (appliances)'},
+                {'val': 'Furniture Stores (furniture)'},
+				{'val': 'Hardware Stores (hardware)'},
+				{'val': 'Home Decor (homedecor)'},
+                {'val': 'Hot Tub & Pool (hottubandpool)'},
+				{'val': 'Kitchen & Bath (kitchenandbath)'},
+				{'val': 'Mattresses (mattresses)'},
+                {'val': 'Nurseries & Gardening (gardening)'}
+            ]},
+			{'val': 'Jewelry (jewelry)'},
+			{'val': 'Knitting Supplies (knittingsupplies)'},
+			{'val': 'Luggage (luggage)'},
+			{'val': 'Medical Supplies (medicalsupplies)'},
+			{'val': 'Mobile Phones (mobilephones)'},
+			{'val': 'Musical Instruments & Teachers (musicalinstrumentsandteachers)'},
+			{'val': 'Office Equipment (officeequipment)'},
+			{'val': 'Outlet Stores (outlet_stores)'},
+			{'val': 'Pawn Shops (pawn)'},
+			{'val': 'Personal Shopping (personal_shopping)'},
+			{'val': 'Photography Stores & Services (photographystores)'},
+			{'val': 'Shopping Centers (shoppingcenters)'},
+			{'val': 'Sporting Goods (sportgoods) ->', 'menu': [
+                {'val': 'Bikes (bikes)'},
+                {'val': 'Golf Equipment (golfequipment)'},
+				{'val': 'Outdoor Gear (outdoorgear)'},
+				{'val': 'Sports Wear (sportswear)'}
+            ]},
+			{'val': 'Thrift Stores (thrift_stores)'},
+			{'val': 'Tobacco Shops (tobaccoshops)'},
+			{'val': 'Toy Stores (toys)'},
+			{'val': 'Uniforms (uniforms)'},
+			{'val': 'Watches (watches)'},
+			{'val': 'Wholesale Stores (wholesale_stores)'},
+			{'val': 'Wigs (wigs)'}
+        ]},
+        {'val': 'Nightlife (nightlife) ->', 'menu': [
+            {'val': 'Adult Entertainment (adultentertainment)'},
+            {'val': 'Bars (bars) ->', 'menu': [
+                {'val': 'Champagne Bars (champagne_bars)'},
+                {'val': 'Dive Bars (divebars)'},
+				{'val': 'Gay Bars (gaybars)'},
+				{'val': 'Hookah Bars (hookah_bars)'},
+				{'val': 'Lounges (lounges)'},
+                {'val': 'Pubs (pubs)'},
+				{'val': 'Sports Bars (sportsbars)'},
+				{'val': 'Wine Bars (wine_bars)'},
+            ]},
+			{'val': 'Comedy Clubs (comedyclubs)'},
+			{'val': 'Country Dance Halls (countrydancehalls)'},
+			{'val': 'Dance Clubs (danceclubs)'},
+			{'val': 'Jazz & Blues (jazzandblues)'},
+			{'val': 'Karaoke (karaoke)'},
+			{'val': 'Music Venues (musicvenues)'},
+			{'val': 'Piano Bars (pianobars)'},
+			{'val': 'Pool Halls (poolhalls)'}
+        ]}
+    ];
+    
+    var sel=["sel1", "sel2", "sel3"];
+    
+    var val=["value"];
+    
+    var cs = new CascadeSelect(sel, menu, { Default: val });
+}
+</script>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f3ef;">
+
+
+
+
+<div style="width:1280px;">
+<div style="width:1270px;height:47px;background-color:#f4f3ef;padding-top:5px;padding-left:10px; "></div>
+<div id="map_canvas" style="width: 1280px; height: 510px;margin:0;padding:0; z-index:0;">
+<!-- Start WOWSlider.com BODY section -->
+	<div id="wowslider-container1">
+	<div class="ws_images"><ul>
+<li><img src="data1/images/3.png" alt="Screen Shot 2013-02-20 at 3.37.48 PM" title="Screen Shot 2013-02-20 at 3.37.48 PM" id="wows1_0"/></li>
+<li><img src="data1/images/pit.jpg" alt="pit" title="pit" id="wows1_1"/></li>
+<li><img src="data1/images/1.jpg" alt="1" title="1" id="wows1_2"/></li>
+</ul></div>
+<a class="wsl" href="http://wowslider.com">Javascript Image Scroller by WOWSlider.com v2.9m</a>
+	<div class="ws_shadow"></div>
+	</div>
+	<script type="text/javascript" src="engine1/wowslider.js"></script>
+	<script type="text/javascript" src="engine1/script.js"></script>
+	<!-- End WOWSlider.com BODY section -->
+
+</div>
+
+<div style="width:1270px;height:50px;background-color:#f4f3ef;padding-top:5px;padding-left:10px;box-shadow: 0px 5px 5px #555;position:absolute; top:0;left:0;z-index:99;"><div style="float:left;width:300px;"><img src="img/logo.png" style="height:40px;"></div><div style="float:right; padding-right:20px;padding-top:10px;"></div></div>
+<!--  
+<script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TIMESERIES_GRAPH_0&export=5&w=500&h=330"></script>
+<script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=GEO_MAP_0_0&export=5&w=500&h=530"></script>
+<script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TOP_QUERIES_0_0&export=5&w=300&h=420"></script>
+-->
+
+<div class="buttomPanel"></div>
+
+
+<div id="sliderDiv">
+<div style="float:left; width:900px;height:510px;">
+<div id="container" style="display:none; height: 400px; margin-top:50px;width:880px;"></div>
+<div id="trendDiv" style="display:none;"></div>
+</div>
+<div style="float:left;width:40px;font:archery black;height:310px;padding-top:200px;">
+<a href="javascript:hideSlide()">
+<img src="img/leftarrow.png" width="35" height="100"/>
+</a>
+</div>
+</div>
+</div>
+
+<div style="position:absolute; left:340px; top:250px; width:600px; height:60px; -webkit-border-radius: 10px;border-radius: 10px; background:rgba(255,255,255,0.5);z-index:99;text-align:center;padding-top:30px;">
+<select id="sel1" style="width:170px"></select>
+<select id="sel2" style="width:170px"></select>
+<select id="sel3" style="width:170px"></select>
+</div>
+
+</body>
+</html>
