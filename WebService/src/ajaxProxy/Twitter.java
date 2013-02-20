@@ -59,11 +59,11 @@ public class Twitter {
 	 *            Longitude
 	 * @return JSON string response
 	 */
-	public String search( double latitude, double longitude) {
+	public String search( String type, double latitude, double longitude) {
 		OAuthRequest request = new OAuthRequest(Verb.GET,
-				"https://search.twitter.com/search.json?q=to:twitter%20geocode:"
-						+ latitude + "," + longitude
-						+ ",1000mi");
+	    		"https://search.twitter.com/search.json?q="+type+"&rpp=100geocode:"
+				+ latitude + "," + longitude
+				+ ",1mi");
 		this.service.signRequest(this.accessToken, request);
 		Response response = request.send();
 		return response.getBody();
