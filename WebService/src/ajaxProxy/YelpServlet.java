@@ -43,7 +43,9 @@ public class YelpServlet extends HttpServlet {
 		YelpBean yelpBean = JSONUtils.fromJson(yelpJsonString, YelpBean.class);
 		Business[] businesses = yelpBean.getBusiness();
 		int saturation = 0;
+		double rating = 0;
 		for (Business business : businesses) {
+			rating += business.getRating().doubleValue();
 			double tempLatitude = Double.parseDouble(business.getLocation()
 					.getCoordinate().getLatitude());
 			double tempLontitude = Double.parseDouble(business.getLocation()
@@ -62,6 +64,8 @@ public class YelpServlet extends HttpServlet {
 				saturation++;
 		}
 		saturation /= businesses.length;
+		rating /= businesses.length;
+		//System.out.println(rating);
 
 		yelpJsonString = yelp.search(superType, latitude, longitude);
 		yelpBean = JSONUtils.fromJson(yelpJsonString, YelpBean.class);
@@ -88,6 +92,7 @@ public class YelpServlet extends HttpServlet {
 		competition /= businesses.length;
 		Score score=new Score();
 		score.need=competition;
+		score.rating = rating;
 		score.prosperous=saturation;
 		score.finalScore=((double)(competition+saturation))/2;
 		

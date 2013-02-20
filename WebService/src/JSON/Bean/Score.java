@@ -7,4 +7,5 @@ public class Score {
 	public Integer bad;
 	public Integer good;
 	public String prob;
+	public Double rating;
 }
