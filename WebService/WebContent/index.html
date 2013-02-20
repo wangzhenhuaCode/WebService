@@ -47,31 +47,32 @@ font-size:14px;
 width:1270px;
 height:47px;
 background-color:#f4f3ef;
-padding-top:5px;
+padding-top:10px;
 padding-left:10px;
 box-shadow: 0px -5px 5px #777;
 position:absolute; 
 top:562px;left:0;
 }
 .buttomPanel span a{
-color:#333;
+color:#555;
 
 text-decoration:none;
 }
 .buttomPanel span a:visited{
-color:#333;
+color:#555;
 
 text-decoration:none;
 }
 .buttomPanel span{
-color:#333;
+color:#555;
 font-size:16px;
 padding-left:10px;
 padding-right:10px;
 border-right:solid 1px #333;
+
 }
 .reset{
-color:#666;
+color:#777;
 font-size:13px;
 text-decoration:none;
 }
@@ -85,6 +86,41 @@ background-color:#f4f3ef;
 box-shadow: 5px 0px 5px #666;
 
 left:-960px;
+}
+#searchAress{
+-webkit-border-radius: 5px;
+border-radius: 5px;
+border:solid 1px #ccc;
+width:200px;
+height: 20px;
+background-image:url('img/search.png');
+background-repeat:no-repeat;
+background-size: 18px 18px;
+background-position:3px 3px;
+padding-left:24px;
+color:#999;
+}
+.queryDiv{
+-webkit-border-radius: 5px;
+border-radius: 5px;
+width:200px;
+padding-top:5px;
+padding-bottom:3px;
+background-color:#fff;
+border:solid 1px #ccc;
+background-image:url('img/search.png');
+background-repeat:no-repeat;
+background-size: 18px 18px;
+background-position:3px 3px;
+padding-left:24px;
+color:#999;
+font-size:13px;
+}
+.queryDiv input{
+border:0;
+color:#999;
+
+
 }
 </style>
 <link href="css/jqvmap.css" media="screen" rel="stylesheet" type="text/css" />
@@ -107,6 +143,7 @@ left:-960px;
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
    var generalCategory='restaurant';
    var subCategory='chinese';
+   var state;
    var mapstyle=[
                  {
                 	    "featureType": "water",
@@ -143,6 +180,22 @@ left:-960px;
     	$.fn.raty.defaults.path = 'js/img';
     	
     	
+    	$('#searchAress').on('keyup', function(e) {
+    	    if (e.which == 13) {
+    	    	codeAddress($('#searchAress').val());
+    	    }
+    	});
+    	$('#keywordsInput').on('keyup', function(e) {
+    	    if (e.which == 13) {
+    	    	search();
+    	    }
+    	});
+    	
+    	$('#radiusInput').on('keyup', function(e) {
+    	    if (e.which == 13) {
+    	    	search();
+    	    }
+    	});
     	
     	
     	initialize();
@@ -172,7 +225,7 @@ left:-960px;
  					rent.push(nums);
  				}
  			}
- 			
+ 			$("#container").html("");
  			var	chart = new Highcharts.Chart({
  		            chart: {
  		                renderTo: 'container',
@@ -435,7 +488,10 @@ left:-960px;
   function search() {
 	  index++;
 	  var keywords=$("#keywordsInput").val();
-	  var radius=parseInt($("#radiusInput").val());
+	  var radius=0;
+	  if($("#radiusInput").val()!="")
+	  radius=parseInt($("#radiusInput").val());
+	  
       var search = {
     	key:"AIzaSyA9wYURB1vV7LhTmatcZfva240mj6gPHpk",
     	query:keywords,
@@ -453,6 +509,7 @@ left:-960px;
               map: map,
               icon:letteredIcon
             });
+            if(radius>0){
             var markercircle = {
             	      strokeColor: color[index],
             	      strokeOpacity: 0.25,
@@ -466,7 +523,7 @@ left:-960px;
             circle[index][i] = new google.maps.Circle(markercircle);
             google.maps.event.addListener(circle[index][i], "rightclick",function(event){showContextMenu(event.latLng);});
             google.maps.event.addListener(circle[index][i], "click",function(event){$('.contextmenu').remove();});
-           	
+            }
         	
           }
         }
@@ -526,6 +583,19 @@ function getCircleIcon(score) {
 	  return circle;
 }
 var myOverlay = new Array();
+var normalPolyStyle={
+        strokeColor:"#0A67A3",
+        strokeOpacity:0.7,
+        strokeWeight:1,
+        fillColor:"#5ccccc",
+        fillOpacity: 0.3}
+var hoverPolyStyle={
+		strokeColor:"#0A67A3",
+        strokeOpacity:0.7,
+        strokeWeight:1,
+        fillColor:"#FFF800",
+        fillOpacity: 0.3
+}
 function loadCountyShape(stateCode){
 	
 	 $.ajax({
@@ -557,6 +627,12 @@ function loadCountyShape(stateCode){
                 	report("&for=county:"+this.get("county")+"&in=state:"+this.get("state"),this.get("countyName"));
                 	map.setZoom(11);
                 });
+                google.maps.event.addListener(pitCounty[k], "mouseover",function(){
+             	   this.setOptions(hoverPolyStyle);
+                });
+                google.maps.event.addListener(pitCounty[k], "mouseout",function(){
+             	   this.setOptions(normalPolyStyle);
+                });
                 }
 			 
 		  }
@@ -587,15 +663,24 @@ function loadStateShape(){
                pitCounty[k].set("stateName",county_id);
                pitCounty[k].set("state",state_id);
                google.maps.event.addListener(pitCounty[k], "click",function(){
-            	   codeAddress(this.get("stateName"));
+            	   state=this.get("stateName");
+            	   codeAddress(state);
             	   loadCountyShape(this.get("state"));
             	   map.setZoom(7);
+            	   showTrends();
+               });
+               google.maps.event.addListener(pitCounty[k], "mouseover",function(){
+            	   this.setOptions(hoverPolyStyle);
+               });
+               google.maps.event.addListener(pitCounty[k], "mouseout",function(){
+            	   this.setOptions(normalPolyStyle);
                });
                }
 			 
 		  }
 		});
 }
+
 function createOverlay(data){
 	clearRegion(myOverlay);
     for(var j=0;j<data.length;j++){
@@ -605,14 +690,11 @@ function createOverlay(data){
         var xyCoords = processedData[i].split(",");
         overlayCoords.push(new google.maps.LatLng(xyCoords[0],xyCoords[1]));
     }
+ 
     myOverlay[j] = new google.maps.Polygon({
-                                            paths: overlayCoords,
-                                            strokeColor:"#0A67A3",
-                                            strokeOpacity:0.7,
-                                            strokeWeight:1,
-                                            fillColor:"#5ccccc",
-                                            fillOpacity: 0.3
+                                            paths: overlayCoords
                                             });
+    myOverlay[j].setOptions(normalPolyStyle);
     
 }
     return myOverlay;
@@ -630,6 +712,55 @@ function showSlide(){
 function hideSlide(){
 	$("#sliderDiv").animate({left:'-960px'});
 }
+function searchFocus(){
+	$("#searchAress").val("");
+}
+function searchBlur(){
+	if($("#searchAress").val()==""){
+		$("#searchAress").val("Search an address");
+	}
+}
+function showTrends(){
+	var str="<iframe width='400' height='400' src='//www.google.com/trends/fetchComponent?hl\75en-US\46q\75"+subCategory+"+"+generalCategory+",+\46geo\75US-"+state+"\46cmpt\75q\46content\0751\46cid\75TIMESERIES_GRAPH_0\46export\0755\46w\075400\46h\075400' style='border: none;'></iframe>";
+	//str=str+"<iframe width='500' height='330' src='//www.google.com/trends/fetchComponent?hl\75en-US\46q\75"+subCategory+"+"+generalCategory+",+\46geo\75US-"+state+"\46cmpt\75q\46content\0751\46cid\75TOP_QUERIES_0_0\46export\0755\46w\075300\46h\075420' style='border: none;'></iframe>";
+	str=str+"<iframe width='500' height='450' src='//www.google.com/trends/fetchComponent?hl\75en-US\46q\75"+subCategory+"+"+generalCategory+",+\46geo\75US-"+state+"\46cmpt\75q\46content\0751\46cid\75GEO_MAP_0_0\46export\0755\46w\075500\46h\075450' style='border: none;'></iframe>";
+	
+	$("#trendDiv").html(str);
+	
+}
+function cencus(){
+	$("#container").show();
+	$("#trendDiv").hide();
+	showSlide();
+}
+function trends(){
+	$("#container").hide();
+	$("#trendDiv").show();
+	showSlide();
+}
+function resetCensus(){
+	clearRegion(myOverlay);
+	var latlng = new google.maps.LatLng(39.639538,-99.580078);
+	map.setCenter(latlng);
+	map.setZoom(5);
+	loadStateShape();
+}
+function resetDistance(){
+	index=-1;
+	for(var i=0;i<markers.length;i++){
+		clearRegion(markers[i]);
+	}
+	for(var i=0;i<circle.length;i++){
+		clearRegion(circle[i]);
+	}
+	
+}
+function resetBusiness(){
+	clearRegion(yelpMarker);
+}
+function resetEvaluate(){
+	clearRegion(evaluateMarker);
+}
 </script>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f3ef;">
@@ -641,7 +772,7 @@ function hideSlide(){
 <div style="width:1270px;height:47px;background-color:#f4f3ef;padding-top:5px;padding-left:10px;"></div>
 <div id="map_canvas" style="width: 1280px; height: 510px;"></div>
 
-<div style="width:1270px;height:47px;background-color:#f4f3ef;padding-top:5px;padding-left:10px;box-shadow: 0px 5px 5px #555;position:absolute; top:0;left:0;"><img src="img/logo.png" style="height:40px;"></div>
+<div style="width:1270px;height:47px;background-color:#f4f3ef;padding-top:5px;padding-left:10px;box-shadow: 0px 5px 5px #555;position:absolute; top:0;left:0;"><div style="float:left;width:300px;"><img src="img/logo.png" style="height:40px;"></div><div style="float:right; padding-right:20px;padding-top:10px;"><input type="text" value="Search an address" id="searchAress" onFocus="searchFocus()" onBlur="searchBlur()" /></div></div>
 <!--  
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=TIMESERIES_GRAPH_0&export=5&w=500&h=330"></script>
 <script type="text/javascript" src="//www.google.com/trends/embed.js?hl=en-US&q=Chinese+restaurant,+&geo=US&cmpt=q&content=1&cid=GEO_MAP_0_0&export=5&w=500&h=530"></script>
@@ -649,17 +780,21 @@ function hideSlide(){
 -->
 
 <div class="buttomPanel">
-<span> <a href="javascript:showSlide()">Census </a></span><span> Trends </span>
-<span>Keyword: 
-<input type="text" id="keywordsInput" /> Distance: <input type="text" id="radiusInput" /><input type="button" value="add" onClick="search()"/>
+<span> <a href="javascript:cencus()">Census </a></span><span> <a href="javascript:trends()">Trends</a> </span>
+<span>
+<d class="queryDiv">
+Keyword: 
+<input type="text" id="keywordsInput" />&nbsp;&nbsp;&nbsp;&nbsp;Distance: <input type="text" id="radiusInput" />
+</d>
 </span>
-<span>Reset: <a class='reset'>All</a>  <a class='reset'>Distance</a>  <a class='reset'>Business</a>  <a class='reset'>Evaluation</a></span>
+<span>Reset: <a class='reset' href="javascript:resetCensus()">Census</a>  <a class='reset' href="javascript:resetDistance()">Distance</a>  <a class='reset'  href="javascript:resetBusiness()">Business</a>  <a class='reset'  href="javascript:resetEvaluate()">Evaluation</a></span>
 </div>
 
 
 <div id="sliderDiv">
 <div style="float:left; width:900px;height:510px;">
-<div id="container" style=" height: 400px; margin-top:50px;width:880px;"></div>
+<div id="container" style="display:none; height: 400px; margin-top:50px;width:880px;"></div>
+<div id="trendDiv" style="display:none;"></div>
 </div>
 <div style="float:left;width:40px;font:archery black;height:310px;padding-top:200px;">
 <a href="javascript:hideSlide()">
