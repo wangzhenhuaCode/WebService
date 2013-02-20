@@ -133,6 +133,7 @@ public class YelpServlet extends HttpServlet {
 		out.println(str);
 		out.flush();
 		out.close();
+		
 	}
 
 	private final double EARTH_RADIUS = 6378137.0;
