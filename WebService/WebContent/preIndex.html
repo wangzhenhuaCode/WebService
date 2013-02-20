@@ -216,8 +216,10 @@ window.onload=function(){
     var menu = [
         {'val': '1', 'txt': 'select your business'},
         {'val': 'Restaurants (restaurants) ->', 'menu': [
+			{'val': ''},
             {'val': 'Afghan (afghani)'},
             {'val': 'African (african) ->', 'menu': [
+				{'val': ''},
                 {'val': 'Senegalese (senegalese)'},
 				{'val': 'South African (southafrican)'}
             ]},
@@ -243,6 +245,7 @@ window.onload=function(){
 			{'val': 'Cajun/Creole (cajun)'},
 			{'val': 'Cambodian (cambodian)'},
 			{'val':  'Caribbean (caribbean) ->', 'menu': [
+{'val': ''},
                 {'val': 'Dominican (dominican)'},
                 {'val': 'Haitian (haitian)'},
 				{'val': 'Puerto Rican (puertorican)'},
@@ -252,6 +255,7 @@ window.onload=function(){
 			{'val': 'Cheesesteaks (cheesesteaks)'},
 			{'val': 'Chicken Wings (chicken_wings)'},
 			{'val': 'Chinese (chinese) ->', 'menu': [
+{'val': ''},
                 {'val': 'Cantonese (cantonese)'},
                 {'val': 'Dim Sum (dimsum)'},
 				{'val': 'Shanghainese (shanghainese)'},
@@ -291,6 +295,7 @@ window.onload=function(){
 			{'val': 'Kosher (kosher)'},
 			{'val': 'Laotian (laotian)'},
 			{'val': 'Latin American (latin)->', 'menu': [
+{'val': ''},
                 {'val': 'Colombian (colombian)'},
                 {'val': 'Salvadoran (salvadoran)'},
 				{'val': 'Venezuelan (venezuelan)'}
@@ -300,6 +305,7 @@ window.onload=function(){
 			{'val': 'Mediterranean (mediterranean)'},
 			{'val': 'Mexican (mexican)'},
 			{'val': 'Middle Eastern (mideastern) ->', 'menu': [
+{'val': ''},
                 {'val': 'Egyptian (egyptian)'},
                 {'val': 'Lebanese (lebanese)'}
 			]},
@@ -337,10 +343,12 @@ window.onload=function(){
 			{'val': 'Vietnamese (vietnamese)'}
         ]},
         {'val': 'Shopping (shopping) ->', 'menu': [
+{'val': ''},
             {'val': 'Adult (adult)'},
 			{'val': 'Antiques (antiques)'},
 			{'val': 'Art Galleries (galleries)'},
             {'val': 'Arts & Crafts (artsandcrafts) ->', 'menu': [
+{'val': ''},
                 {'val': 'Art Supplies (artsupplies)'},
                 {'val': 'Cards & Stationery (stationery)'},
 				{'val': 'Costumes (costumes)'},
@@ -351,6 +359,7 @@ window.onload=function(){
 			{'val': 'Baby Gear & Furniture (baby_gear)'},
 			{'val': 'Bespoke Clothing (bespoke)'},
             {'val': 'Books, Mags, Music & Video (media) ->', 'menu': [
+{'val': ''},
                 {'val': 'Bookstores (bookstores)'},
                 {'val': 'Comic Books (comicbooks)'},
 				{'val': 'Music & DVDs (musicvideo)'},
@@ -367,6 +376,7 @@ window.onload=function(){
 			{'val': 'Electronics (electronics)'},
             {'val': 'Eyewear & Opticians (opticians)'},
 			{'val': 'Fashion (fashion) ->', 'menu': [
+{'val': ''},
                 {'val': 'Accessories (accessories)'},
                 {'val': 'Children Clothing (childcloth)'},
 				{'val': 'Department Stores (deptstores)'},
@@ -385,6 +395,7 @@ window.onload=function(){
             ]},
 			{'val': 'Fireworks (fireworks)'},
 			{'val': 'Flowers & Gifts (flowers) ->', 'menu': [
+{'val': ''},
                 {'val': 'Cards & Stationery (stationery)'},
                 {'val': 'Florists (florists)'},
 				{'val': 'Gift Shops (giftshops)'}
@@ -392,6 +403,7 @@ window.onload=function(){
             {'val': 'Guns & Ammo (guns_and_ammo)'},
 			{'val': 'Hobby Shops (hobbyshops)'},
 			{'val': 'Home & Garden (homeandgarden) ->', 'menu': [
+{'val': ''},
                 {'val': 'Appliances (appliances)'},
                 {'val': 'Furniture Stores (furniture)'},
 				{'val': 'Hardware Stores (hardware)'},
@@ -414,6 +426,7 @@ window.onload=function(){
 			{'val': 'Photography Stores & Services (photographystores)'},
 			{'val': 'Shopping Centers (shoppingcenters)'},
 			{'val': 'Sporting Goods (sportgoods) ->', 'menu': [
+{'val': ''},
                 {'val': 'Bikes (bikes)'},
                 {'val': 'Golf Equipment (golfequipment)'},
 				{'val': 'Outdoor Gear (outdoorgear)'},
@@ -428,8 +441,10 @@ window.onload=function(){
 			{'val': 'Wigs (wigs)'}
         ]},
         {'val': 'Nightlife (nightlife) ->', 'menu': [
+{'val': ''},
             {'val': 'Adult Entertainment (adultentertainment)'},
             {'val': 'Bars (bars) ->', 'menu': [
+{'val': ''},
                 {'val': 'Champagne Bars (champagne_bars)'},
                 {'val': 'Dive Bars (divebars)'},
 				{'val': 'Gay Bars (gaybars)'},
@@ -505,10 +520,13 @@ window.onload=function(){
 </div>
 </div>
 
-<div style="position:absolute; left:340px; top:250px; width:600px; height:60px; -webkit-border-radius: 10px;border-radius: 10px; background:rgba(255,255,255,0.5);z-index:99;text-align:center;padding-top:30px;">
-<select id="sel1" style="width:170px"></select>
-<select id="sel2" style="width:170px"></select>
-<select id="sel3" style="width:170px"></select>
+<div style="position:absolute; left:300px; top:250px; width:680px; height:60px; -webkit-border-radius: 10px;border-radius: 10px; background:rgba(255,255,255,0.5);z-index:99;text-align:center;padding-top:30px;">
+<form action="/WebService/map">
+<select id="sel1" style="width:170px" name="t1"></select>
+<select id="sel2" style="width:170px" name="t2"></select>
+<select id="sel3" style="width:170px" name="t3"></select>
+<input type="submit" value="Go" style="height:30px; background:url('img/button.jpg');-webkit-border-radius: 4px;border-radius: 4px;border:0; color:#fff;width:70px;">
+</form>
 </div>
 
 </body>
