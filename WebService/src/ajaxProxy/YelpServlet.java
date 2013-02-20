@@ -103,7 +103,7 @@ public class YelpServlet extends HttpServlet {
 	    latitude = Double.parseDouble(request.getParameter("latitude"));
 		longitude = Double
 				.parseDouble(request.getParameter("longitude"));
-	    String twitterJsonString = twitter.search(latitude, longitude);
+	    String twitterJsonString = twitter.search(type, latitude, longitude);
 	    System.out.println(twitterJsonString);
 	    TwitterBean twitterBean = JSONUtils.fromJson(twitterJsonString, TwitterBean.class);
 		Result[] results = twitterBean.getResults();
