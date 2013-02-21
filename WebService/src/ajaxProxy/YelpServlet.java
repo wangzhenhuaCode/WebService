@@ -94,7 +94,7 @@ public class YelpServlet extends HttpServlet {
 		score.need=competition;
 		score.rating = rating;
 		score.prosperous=saturation;
-		score.finalScore=((double)(competition+saturation))/2;
+		score.finalScore=(((double)competition+(double)saturation+rating))/3;
 		
 		consumerKey = "KkWZJyZ9LMVFNNt6pmxoDg";
 		consumerSecret = "uWI0MvkJ0wHqCEF8dsVR0yGPBRjdCJvcpAJv0M7gg";

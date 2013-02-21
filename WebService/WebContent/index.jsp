@@ -35,7 +35,7 @@
 .markerLabel{
 	color:#fff;
 	font-size:14px;
-	width:20px;
+	width:17px;
 	text-align:center;
 	
 }
@@ -149,7 +149,7 @@ color:#999;
    // var url='http://www.zillow.com/webservice/GetRegionChildren.htm';
    var generalCategory='<%=request.getAttribute("gtype")%>';
    var subCategory='<%=request.getAttribute("stype")%>';
-   var state;
+   
    var mapstyle=[
                  {
                 	    "featureType": "water",
@@ -413,7 +413,7 @@ color:#999;
 	  $('.contextmenu').remove();
     	  
     	  parameters = [];
-    	  parameters.push(['term', 'restaurant']);
+    	  parameters.push(['term', generalCategory+"+"+subCategory]);
     	  parameters.push(['ll', lot+","+lat]);
     	  parameters.push(['sort', 1]);
     	  parameters.push(['callback', 'cb']);
@@ -567,12 +567,13 @@ function getEvaluateInfo(content,marker) {
       }
 
 	  	evaluateInfoWIN = new google.maps.InfoWindow({
-          content: "<div style='width:300px;' class='evaluateWindow'><p>Prosperous: <span id='pstar'></span></p><p>Need: <span id='nstar'></span></p><p >Final: <span id='astar'></span></p><p>Customer satisfactory: "+content.prob+" %</p></div>"
+          content: "<div style='width:300px;height:150px;' class='evaluateWindow'><p>Prosperous: <span id='pstar'></span></p><p>Need: <span id='nstar'></span></p><p>Yelp average: <span id='ystar'></span></p><p >Final: <span id='astar'></span></p><p>Customer satisfactory: "+content.prob+" %</p></div>"
         });
       	evaluateInfoWIN.open(map, marker);
       	setTimeout(function() {
       	$('#pstar').raty({ readOnly: true, score: content.prosperous });
       	$('#nstar').raty({ readOnly: true, score: content.need });
+      	$('#ystar').raty({ readOnly: true, score: content.rating });
       	$('#astar').raty({ readOnly: true, score: content.finalScore });
       	},100);
 	  }
@@ -666,14 +667,16 @@ function loadStateShape(){
                pitCounty[k].setMap(map);
                var county_id=$(state[k]).children("county_id").text();
                var state_id=$(state[k]).children("state_id").text();
+               var state_code=$(state[k]).children("state_code").text();
                pitCounty[k].set("stateName",county_id);
                pitCounty[k].set("state",state_id);
+               pitCounty[k].set("stateCode",state_code);
                google.maps.event.addListener(pitCounty[k], "click",function(){
-            	   state=this.get("stateName");
-            	   codeAddress(state);
+            	   state=this.get("stateCode");
+            	   codeAddress(this.get("stateName"));
             	   loadCountyShape(this.get("state"));
             	   map.setZoom(7);
-            	   showTrends();
+            	   showTrends(state);
                });
                google.maps.event.addListener(pitCounty[k], "mouseover",function(){
             	   this.setOptions(hoverPolyStyle);
@@ -726,7 +729,7 @@ function searchBlur(){
 		$("#searchAress").val("Search an address");
 	}
 }
-function showTrends(){
+function showTrends(state){
 	var str="<iframe width='400' height='400' src='//www.google.com/trends/fetchComponent?hl\75en-US\46q\75"+subCategory+"+"+generalCategory+",+\46geo\75US-"+state+"\46cmpt\75q\46content\0751\46cid\75TIMESERIES_GRAPH_0\46export\0755\46w\075400\46h\075400' style='border: none;'></iframe>";
 	//str=str+"<iframe width='500' height='330' src='//www.google.com/trends/fetchComponent?hl\75en-US\46q\75"+subCategory+"+"+generalCategory+",+\46geo\75US-"+state+"\46cmpt\75q\46content\0751\46cid\75TOP_QUERIES_0_0\46export\0755\46w\075300\46h\075420' style='border: none;'></iframe>";
 	str=str+"<iframe width='500' height='450' src='//www.google.com/trends/fetchComponent?hl\75en-US\46q\75"+subCategory+"+"+generalCategory+",+\46geo\75US-"+state+"\46cmpt\75q\46content\0751\46cid\75GEO_MAP_0_0\46export\0755\46w\075500\46h\075450' style='border: none;'></iframe>";
